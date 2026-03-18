@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  ci:
+    name: Lint & Test
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: GoReleaser
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v6.3.0
+        with:
+          go-version-file: go.mod
+
+      - uses: goreleaser/goreleaser-action@v7.0.0
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

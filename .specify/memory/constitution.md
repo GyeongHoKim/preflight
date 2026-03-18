@@ -121,7 +121,7 @@ and lowers the maintenance burden.
 - **Linter**: golangci-lint, invoked via `make lint`
 - **Testing**: `go test ./...` with table-driven tests preferred
 - **Distribution**: Single statically-linked binary; released via GitHub Releases,
-  Homebrew tap (`gyeongho/tap/preflight`), and `go install`
+  Homebrew tap (`GyeongHoKim/tap/preflight`), and `go install`
 - **Supported AI providers**: `claude`, `codex`, `gemini`, `qwen` (invoked as
   subprocess; no direct API usage by preflight itself)
 - **Configuration**: `preflight.yml` (project-level) or

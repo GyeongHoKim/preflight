@@ -89,7 +89,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/gyeongho/preflight
+        - github.com/GyeongHoKim/preflight
 
 issues:
   max-issues-per-linter: 0

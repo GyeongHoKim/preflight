@@ -56,19 +56,19 @@ One of the following CLI tools installed and authenticated:
 **Homebrew (macOS/Linux)**
 
 ```bash
-brew install gyeongho/tap/preflight
+brew install GyeongHoKim/tap/preflight
 ```
 
 **curl installer**
 
 ```bash
-curl -fsSL https://github.com/gyeongho/preflight/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/GyeongHoKim/preflight/releases/latest/download/install.sh | sh
 ```
 
 **Go**
 
 ```bash
-go install github.com/gyeongho/preflight@latest
+go install github.com/GyeongHoKim/preflight@latest
 ```
 
 ---

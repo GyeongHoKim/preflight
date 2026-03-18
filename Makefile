@@ -51,3 +51,9 @@ run: build
 setup:
 	npm install
 	lefthook install
+
+## release-dry-run: Run goreleaser in snapshot mode (no publish)
+release-dry-run:
+	goreleaser release --snapshot --clean
+
+.PHONY: release-dry-run
