@@ -44,3 +44,10 @@ Key design points:
 3. `go build ./...` succeeds
 4. Manual check against https://go.dev/wiki/CodeReviewComments for changed files
 5. Exit-code contract verified for affected code paths
+
+## Active Technologies
+- Go (latest stable, ≥1.22) + cobra, bubbletea, lipgloss, go-isatty, testify, yaml.v3 (001-preflight-ai-review)
+- N/A (no persistent state; config read from YAML files, hook written to `.git/hooks/pre-push`) (001-preflight-ai-review)
+
+## Recent Changes
+- 001-preflight-ai-review: Added Go (latest stable, ≥1.22) + cobra, bubbletea, lipgloss, go-isatty, testify, yaml.v3
