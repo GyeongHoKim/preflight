@@ -41,6 +41,9 @@ func (r *ClaudeRunner) Run(ctx context.Context, diff []byte) (review.ProviderRes
 		"--output-format", "json",
 		"--no-session-persistence",
 		"--json-schema", r.schema,
+		"--tools", "Read,LS,Glob,Bash,WebFetch",
+		"--allowedTools", "Read,LS,Glob,WebFetch,Bash(git diff *),Bash(git log *),Bash(git show *),Bash(find *),Bash(grep *)",
+		"--max-turns", "30",
 	}
 	cmd := exec.CommandContext(ctx, path, args...)
 	cmd.Stdin = bytes.NewReader(diff)

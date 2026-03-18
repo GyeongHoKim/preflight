@@ -17,7 +17,7 @@ all: build
 
 ## build: Compile the binary into ./bin/
 build:
-	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./...
+	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/preflight
 
 ## test: Run all tests with race detector
 test:
