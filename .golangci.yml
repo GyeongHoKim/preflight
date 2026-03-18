@@ -1,0 +1,96 @@
+# .golangci.yml — based on github.com/cli/cli and github.com/moby/moby
+version: "2"
+
+linters:
+  default: none
+
+  enable:
+    # Correctness
+    - govet
+    - ineffassign
+    - unused
+    - reassign            # package variables not reassigned
+    - copyloopvar         # loop variable copies (Go 1.22+)
+
+    # Error handling (required by project constitution)
+    - errcheck
+    - errorlint
+    - nilerr
+
+    # Bugs / safety
+    - asasalint           # pass []any as any in variadic func(...any)
+    - bodyclose           # HTTP response body closed
+    - durationcheck       # two durations multiplied together
+    - fatcontext          # nested contexts in loops
+    - nosprintfhostport   # Sprintf misuse for host:port URLs
+
+    # Security baseline
+    - gosec
+
+    # Code quality
+    - staticcheck
+    - gocritic
+    - nolintlint
+    - exptostd            # replace golang.org/x/exp with stdlib equivalents
+
+    # Style
+    - misspell
+    - revive
+
+  settings:
+    gocritic:
+      disabled-checks:
+        - appendAssign
+      disabled-tags:
+        - style             # mirrors github.com/cli/cli choice
+
+    gosec:
+      excludes:
+        - G104  # duplicate of errcheck
+        - G204  # subprocess with variable — intentional for a CLI
+        - G301
+        - G302
+        - G304  # file path as taint — intentional for a CLI
+        - G307
+
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+    revive:
+      rules:
+        - name: var-naming
+        - name: error-strings
+        - name: if-return
+        - name: increment-decrement
+        - name: unexported-return
+
+    staticcheck:
+      checks:
+        - all
+        - -ST1000  # package comment not required on every package
+        - -ST1003  # allow initialisms per Go convention (already covered by revive)
+
+  exclusions:
+    paths:
+      - vendor
+    rules:
+      - path: _test\.go$
+        linters:
+          - bodyclose
+          - gosec
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/gyeongho/preflight
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,0 +1,15 @@
+# lefthook.yml — https://evilmartians.github.io/lefthook/
+min_version: "1.6.0"
+
+pre-commit:
+  parallel: false
+  commands:
+    lint:
+      glob: "*.go"
+      run: golangci-lint run --fix ./...
+      stage_fixed: true   # re-stage files modified by --fix
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx --no -- commitlint --edit {1}
