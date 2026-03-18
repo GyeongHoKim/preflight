@@ -35,3 +35,4 @@ brews:
     repository:
       owner: GyeongHoKim
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
