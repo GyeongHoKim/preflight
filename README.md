@@ -2,7 +2,7 @@
 
 > AI-powered code review in your terminal, before you push.
 
-**preflight** runs an AI code review on your staged diff using locally installed AI CLI tools — no API tokens required. Works with your existing subscription to Claude, ChatGPT/Codex, or OpenCode.
+**preflight** runs an AI code review on your staged diff using locally installed AI CLI tools — no API tokens required. Works with your existing subscription to Claude, ChatGPT/Codex, Gemini, or Qwen.
 
 ```
 $ git push origin main
@@ -43,11 +43,12 @@ preflight fills that gap: it runs entirely on your local machine using the CLI t
 
 One of the following CLI tools installed and authenticated:
 
-| Provider  | CLI                                                | Authentication       |
-| --------- | -------------------------------------------------- | -------------------- |
-| Anthropic | [`claude`](https://code.claude.com)                | Claude subscription  |
-| OpenAI    | [`codex`](https://developers.openai.com/codex/cli) | ChatGPT subscription |
-| OpenCode  | [`opencode`](https://opencode.ai)                  | OpenCode account     |
+| Provider  | CLI                                                     | Authentication       |
+| --------- | ------------------------------------------------------- | -------------------- |
+| Anthropic | [`claude`](https://code.claude.com)                     | Claude subscription  |
+| OpenAI    | [`codex`](https://developers.openai.com/codex/cli)      | ChatGPT subscription |
+| Google    | [`gemini`](https://github.com/google-gemini/gemini-cli) | Gemini account       |
+| Alibaba   | [`qwen`](https://github.com/QwenLM/qwen-code)           | Qwen account         |
 
 ---
 
@@ -213,7 +214,7 @@ Commands:
   check       Verify that a supported AI CLI is installed and authenticated
 
 Flags:
-  --provider string   AI provider to use (claude, codex, opencode)
+  --provider string   AI provider to use (claude, codex, gemini, qwen)
   --force             Push even if CRITICAL issues are found
   --no-tui            Print results as plain text (useful for CI or pipes)
   --config string     Path to config file (default: ./preflight.yml)
