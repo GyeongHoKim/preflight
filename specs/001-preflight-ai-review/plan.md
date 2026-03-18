@@ -67,7 +67,8 @@ cmd/
 internal/
 ├── cli/                          # cobra command definitions
 │   ├── root.go                   # Root command; PersistentPreRunE loads config + validates flags
-│   ├── install.go                # `preflight install [--global] [--force]`
+│   ├── install.go                # `preflight install [--global] [--force]`; WriteHookScript(), IsManagedHook()
+│   ├── install_test.go           # Tests for hook file creation, --force, idempotency
 │   ├── uninstall.go              # `preflight uninstall [--global]`
 │   └── run.go                    # `preflight run` — also called by the installed hook
 │
@@ -99,7 +100,7 @@ internal/
 │
 └── hook/                         # Pre-push hook orchestration
     ├── hook.go                   # Run(): diff → provider → tui/plain → exit code
-    └── hook_test.go
+    └── hook_test.go              # Integration tests for exit code paths
 
 .goreleaser.yaml                  # goreleaser release config (Linux/macOS, arm64+amd64)
 .github/
@@ -158,7 +159,7 @@ go.sum
 - `ReviewModel` Bubbletea model with review panel + blocking prompt
 - `model.Update()` handles: arrow keys to navigate findings, Enter to confirm, `y`/`n` shortcuts
 - `styles.go`: critical=bold red, warning=yellow, info=dim cyan; 80-column width constraint
-- `plain.PlainRender(w io.Writer, r *review.Review)` — testable without stdout
+- `plain.PlainRender(w io.Writer, r *review.Review, branch string, commitCount int)` — testable without stdout
 - TTY detection via `go-isatty`; auto-fallback to plain-text when no TTY
 - `model_test.go` tests `Update()` with synthetic key messages; `View()` contains expected strings
 
@@ -171,7 +172,7 @@ go.sum
 **Packages**: `internal/hook`
 
 **Deliverables**:
-- `hook.Run(ctx context.Context, cfg *config.Config, stdin, stdout, stderr io.ReadWriter) int` — returns exit code
+- `hook.Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stderr io.Writer, noTUI bool) int` — returns exit code
 - Correct exit codes for all paths: clean=0, blocked=1, overridden=0, fail-open=0, usage error=2
 - `preflight run` command calls `hook.Run()` (no code duplication between hook and manual run)
 - Integration test: synthetic git diff + `MockRunner` → assert correct exit code and output

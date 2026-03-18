@@ -67,7 +67,7 @@ A developer discovers preflight and wants to start using it. They install the bi
 **Acceptance Scenarios**:
 
 1. **Given** preflight is installed on the system, **When** the developer runs `preflight install` in a repository, **Then** preflight registers itself as the pre-push hook for that repository.
-2. **Given** a repository already has an existing pre-push hook, **When** the developer runs `preflight install`, **Then** preflight either integrates safely alongside the existing hook or warns the developer and requests confirmation before replacing it.
+2. **Given** a repository already has an existing pre-push hook, **When** the developer runs `preflight install`, **Then** preflight detects the existing hook, emits a warning naming the existing hook file, and exits with an error; the developer must pass `--force` to replace it.
 3. **Given** the developer wants preflight active in all future repositories, **When** they configure preflight in a global git hooks directory, **Then** every subsequent `git push` in any repository on the machine runs preflight.
 
 ---
@@ -150,7 +150,7 @@ The developer has multiple AI CLI tools installed (e.g., both claude and gemini)
 - **SC-003**: When the AI CLI is unavailable, the push is never blocked — the fail-open path is exercised correctly 100% of the time.
 - **SC-004**: A developer who has never used preflight before can read the terminal UI output and understand whether their push was blocked or approved without consulting documentation.
 - **SC-005**: The tool does not add more than 5 seconds of overhead to pushes where the diff is empty or the review produces no findings.
-- **SC-006**: The plain-text (`--no-tui`) output is parseable by standard shell tools (grep, awk, jq-compatible if structured) without post-processing.
+- **SC-006**: The plain-text (`--no-tui`) output is parseable by standard shell tools (grep, awk) without post-processing; each finding appears on a predictable line prefixed with its severity in brackets (e.g., `[CRITICAL]`).
 
 ## Assumptions
 
