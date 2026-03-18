@@ -30,7 +30,7 @@ func buildRunCmd() *cobra.Command {
 			}
 
 			noTUI := noTUIFlag || globalFlags.noTUI
-			code := hook.Run(context.Background(), cfg, os.Stdin, os.Stdout, os.Stderr, noTUI, nil)
+			code := hook.Run(context.Background(), cfg, os.Stdin, os.Stdout, os.Stderr, noTUI, nil, nil)
 			os.Exit(code)
 			return nil
 		},

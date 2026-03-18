@@ -68,6 +68,19 @@ func IsGitRepo(dir string) bool {
 	return cmd.Run() == nil
 }
 
+// Collector collects a git diff for a given push.
+type Collector interface {
+	Collect(ctx context.Context, info PushInfo, maxBytes int) ([]byte, error)
+}
+
+// GitCollector is the real Collector that invokes git.
+type GitCollector struct{}
+
+// Collect implements Collector using the local git binary.
+func (GitCollector) Collect(ctx context.Context, info PushInfo, maxBytes int) ([]byte, error) {
+	return CollectDiff(ctx, info, maxBytes)
+}
+
 // CollectDiff runs git diff <remoteSHA>...<localSHA> and returns the diff
 // bytes. If the diff exceeds maxBytes it is truncated and a warning comment is
 // prepended. An empty diff returns nil with no error.

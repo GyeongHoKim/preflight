@@ -27,7 +27,7 @@ var defaultProviders = []string{"claude", "codex", "gemini", "qwen"}
 //   - 0: clean review, fail-open condition, or user chose to push anyway
 //   - 1: blocking review and user cancelled (or internal error after review)
 //   - 2: usage error (not a git repo)
-func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stderr io.Writer, noTUI bool, providerRunner provider.Runner) int {
+func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stderr io.Writer, noTUI bool, diffCollector diff.Collector, providerRunner provider.Runner) int {
 	// Check git repo.
 	wd, err := os.Getwd()
 	if err != nil {
@@ -59,7 +59,10 @@ func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stder
 	diffCtx, cancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer cancel()
 
-	diffBytes, err := diff.CollectDiff(diffCtx, pi, cfg.MaxDiffBytes)
+	if diffCollector == nil {
+		diffCollector = diff.GitCollector{}
+	}
+	diffBytes, err := diffCollector.Collect(diffCtx, pi, cfg.MaxDiffBytes)
 	if err != nil {
 		logf(stderr, "preflight: collect diff: %v\n", err)
 		return 1
