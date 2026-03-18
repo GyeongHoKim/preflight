@@ -183,7 +183,7 @@ func buildRunner(cfg *config.Config) (provider.Runner, error) {
 	case "codex":
 		return provider.NewCodexRunner(prompt), nil
 	case "qwen":
-		return provider.NewQwenRunner(prompt, schema), nil
+		return provider.NewQwenRunner(prompt), nil
 	default:
 		return nil, fmt.Errorf("unknown provider %q", provName)
 	}

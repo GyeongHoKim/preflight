@@ -10,15 +10,13 @@ import (
 )
 
 // QwenRunner invokes the qwen CLI to perform a code review.
-// The qwen CLI shares the same invocation pattern as claude.
 type QwenRunner struct {
 	prompt string
-	schema string
 }
 
-// NewQwenRunner creates a QwenRunner with the given prompt and JSON schema.
-func NewQwenRunner(prompt, schema string) *QwenRunner {
-	return &QwenRunner{prompt: prompt, schema: schema}
+// NewQwenRunner creates a QwenRunner with the given prompt.
+func NewQwenRunner(prompt string) *QwenRunner {
+	return &QwenRunner{prompt: prompt}
 }
 
 // Run implements Runner for the qwen CLI.
@@ -28,14 +26,13 @@ func (r *QwenRunner) Run(ctx context.Context, diff []byte) (review.ProviderResul
 		return review.ProviderResult{}, ErrProviderNotFound
 	}
 
+	fullPrompt := r.prompt + "\n\n" + string(diff)
 	args := []string{
-		"-p", r.prompt,
+		"-p", fullPrompt,
 		"--output-format", "json",
-		"--no-session-persistence",
-		"--json-schema", r.schema,
+		"--yolo",
 	}
 	cmd := exec.CommandContext(ctx, path, args...)
-	cmd.Stdin = bytes.NewReader(diff)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

@@ -27,7 +27,7 @@ func (r *GeminiRunner) Run(ctx context.Context, diff []byte) (review.ProviderRes
 	}
 
 	fullPrompt := r.prompt + "\n\n" + string(diff)
-	cmd := exec.CommandContext(ctx, path, "--prompt", fullPrompt, "--output-format", "json")
+	cmd := exec.CommandContext(ctx, path, "--prompt", fullPrompt, "--output-format", "json", "--approval-mode", "yolo")
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

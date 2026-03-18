@@ -49,7 +49,7 @@ func (r *CodexRunner) Run(ctx context.Context, diff []byte) (review.ProviderResu
 		fullPrompt = r.prompt + "\n\n" + string(diff)
 	}
 
-	cmd := exec.CommandContext(ctx, path, "-q", "--json", fullPrompt)
+	cmd := exec.CommandContext(ctx, path, "exec", "--sandbox", "read-only", "--json", "--ephemeral", fullPrompt)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
