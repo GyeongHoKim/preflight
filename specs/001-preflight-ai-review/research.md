@@ -320,7 +320,7 @@ prompt_extra: ""          # additional instructions appended to the system promp
 - `goos: [linux, darwin]`, `goarch: [amd64, arm64]`
 - `ldflags: [-s -w -X main.Version={{.Version}}]` for version injection
 - `archives: [{format: tar.gz}]`
-- `brews: [...]` targeting `gyeongho/homebrew-tap`
+- `brews: [...]` targeting `GyeongHoKim/homebrew-tap`
 
 ### 5.2 GitHub Actions Release Workflow
 
