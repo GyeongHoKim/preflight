@@ -81,6 +81,23 @@ func (GitCollector) Collect(ctx context.Context, info PushInfo, maxBytes int) ([
 	return CollectDiff(ctx, info, maxBytes)
 }
 
+// remoteBaseCandidates is the ordered list of remote refs tried when computing
+// the merge-base for a new-branch push.
+var remoteBaseCandidates = []string{"origin/HEAD", "origin/main", "origin/master"}
+
+// mergeBaseWith returns the merge-base SHA between localSHA and the first
+// resolvable ref from candidates. Returns an empty string if none resolve.
+func mergeBaseWith(ctx context.Context, localSHA string, candidates []string) string {
+	for _, ref := range candidates {
+		cmd := exec.CommandContext(ctx, "git", "merge-base", ref, localSHA)
+		out, err := cmd.Output()
+		if err == nil && len(out) > 0 {
+			return strings.TrimSpace(string(out))
+		}
+	}
+	return ""
+}
+
 // CollectDiff runs git diff <remoteSHA>...<localSHA> and returns the diff
 // bytes. If the diff exceeds maxBytes it is truncated and a warning comment is
 // prepended. An empty diff returns nil with no error.
@@ -91,9 +108,14 @@ func CollectDiff(ctx context.Context, info PushInfo, maxBytes int) ([]byte, erro
 
 	var args []string
 	if info.IsNewBranch() {
-		// New branch: diff from the common ancestor of HEAD and the remote default.
-		// Fall back to diffing all commits in the branch.
-		args = []string{"diff", "HEAD"}
+		// New branch: diff from the merge-base with the remote default branch.
+		// Tries origin/HEAD → origin/main → origin/master in order.
+		// Falls back to the tip commit only if no remote ref is resolvable.
+		if base := mergeBaseWith(ctx, info.LocalSHA, remoteBaseCandidates); base != "" {
+			args = []string{"diff", base + "..." + info.LocalSHA}
+		} else {
+			args = []string{"diff", info.LocalSHA + "^!"}
+		}
 	} else {
 		args = []string{"diff", info.RemoteSHA + "..." + info.LocalSHA}
 	}
