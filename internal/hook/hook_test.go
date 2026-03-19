@@ -11,7 +11,7 @@ import (
 	"github.com/GyeongHoKim/preflight/internal/config"
 	"github.com/GyeongHoKim/preflight/internal/diff"
 	"github.com/GyeongHoKim/preflight/internal/provider"
-	"github.com/GyeongHoKim/preflight/internal/review"
+	"github.com/GyeongHoKim/preflight/internal/review/reviewtest"
 )
 
 // fakeDiff is a test double for diff.Collector that returns configurable bytes.
@@ -40,14 +40,8 @@ func makePushInfo(localSHA, remoteSHA string) string {
 	return "refs/heads/main " + localSHA + " refs/heads/main " + remoteSHA + "\n"
 }
 
-func cleanResultJSON() review.ProviderResult {
-	return review.ProviderResult{
-		Stdout: []byte(`{"findings":[],"blocking":false,"summary":"all good"}`),
-	}
-}
-
 func TestRun_CleanReview(t *testing.T) {
-	mock := &provider.MockRunner{Result: cleanResultJSON()}
+	mock := &provider.MockRunner{Result: reviewtest.CleanReview("claude")}
 	var out, errOut bytes.Buffer
 	stdin := strings.NewReader(makePushInfo("abc123", "0000000000000000000000000000000000000000"))
 	code := Run(context.Background(), defaultCfg(), stdin, &out, &errOut, true, someDiff(), mock)
@@ -72,7 +66,7 @@ func TestRun_ProviderNotFound_FailOpen(t *testing.T) {
 }
 
 func TestRun_MalformedResponse_FailOpen(t *testing.T) {
-	mock := &provider.MockRunner{Result: review.ProviderResult{Stdout: []byte("not json")}}
+	mock := &provider.MockRunner{Result: reviewtest.Malformed()}
 	var out, errOut bytes.Buffer
 	stdin := strings.NewReader(makePushInfo("abc123", "0000000000000000000000000000000000000000"))
 	code := Run(context.Background(), defaultCfg(), stdin, &out, &errOut, true, someDiff(), mock)
