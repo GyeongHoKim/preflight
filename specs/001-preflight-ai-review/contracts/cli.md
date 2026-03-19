@@ -49,7 +49,7 @@ Runs a code review manually against the current branch's diff, without waiting f
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--provider` | string | `"auto"` | AI provider: `auto`, `claude`, `codex`, `gemini`, `qwen` |
+| `--provider` | string | `"auto"` | AI provider: `auto`, `claude`, `codex` |
 | `--no-tui` | bool | false | Plain-text output; do not launch Bubbletea UI |
 | `--timeout` | duration | `60s` | Max time to wait for AI CLI |
 | `--config` | string | `""` | Path to config file (overrides default resolution) |
@@ -173,7 +173,7 @@ For `claude`, use `--json-schema` to enforce this schema at the CLI level. For o
 **YAML schema:**
 ```yaml
 # .preflight.yml
-provider: auto          # auto | claude | codex | gemini | qwen
+provider: auto          # auto | claude | codex
 block_on: critical      # critical | warning
 timeout: 60s            # Go duration string
 prompt_extra: ""        # appended to system prompt

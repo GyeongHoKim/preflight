@@ -37,7 +37,7 @@ The complete output of a single AI review session.
 | `Findings` | `[]Finding` | yes | Ordered list of findings; may be empty |
 | `Blocking` | `bool` | yes | `true` if any finding meets or exceeds the configured `block_on` threshold |
 | `Summary` | `string` | yes | One-sentence overall assessment from the AI |
-| `Provider` | `string` | yes | The provider that produced this review (`"claude"`, `"gemini"`, etc.) |
+| `Provider` | `string` | yes | The provider that produced this review (`"claude"`, `"codex"`, etc.) |
 | `DurationMS` | `int64` | yes | Wall-clock time from invocation to parsed result, in milliseconds |
 
 **Derived property**: `CriticalCount`, `WarningCount` (computed from `Findings` — not stored).
@@ -67,14 +67,14 @@ User-controlled settings loaded from `.preflight.yml` (project) or `~/.config/pr
 
 | Field | YAML key | Type | Default | Description |
 |-------|----------|------|---------|-------------|
-| `Provider` | `provider` | `string` | `"auto"` | AI provider: `auto`, `claude`, `codex`, `gemini`, `qwen` |
+| `Provider` | `provider` | `string` | `"auto"` | AI provider: `auto`, `claude`, `codex` |
 | `BlockOn` | `block_on` | `string` | `"critical"` | Minimum severity that blocks a push: `"critical"` or `"warning"` |
 | `Timeout` | `timeout` | `time.Duration` | `60s` | Maximum time to wait for AI CLI response |
 | `PromptExtra` | `prompt_extra` | `string` | `""` | Additional instructions appended to the review system prompt |
 | `MaxDiffBytes` | `max_diff_bytes` | `int` | `524288` (512 KB) | Truncate diff above this size with a warning |
 
 **Validation rules:**
-- `Provider` must be one of: `auto`, `claude`, `codex`, `gemini`, `qwen`.
+- `Provider` must be one of: `auto`, `claude`, `codex`.
 - `BlockOn` must be one of: `critical`, `warning`.
 - `Timeout` must be > 0.
 - `MaxDiffBytes` must be > 0.

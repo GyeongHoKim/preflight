@@ -5,8 +5,8 @@
 # All fields are optional — unset fields fall back to the defaults shown below.
 
 # AI provider to use for code review.
-# auto: tries claude → codex → gemini → qwen in order, using the first found.
-# provider: auto  # auto | claude | codex | gemini | qwen
+# auto: tries claude → codex in order, using the first found.
+# provider: auto  # auto | claude | codex
 
 # Minimum severity that blocks a push.
 # critical: only CRITICAL findings block (default).

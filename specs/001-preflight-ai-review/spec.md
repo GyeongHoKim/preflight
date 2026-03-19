@@ -90,7 +90,7 @@ A developer prefers not to use the full-screen terminal UI, or their terminal is
 
 ### User Story 6 — Provider Selection and Configuration (Priority: P6)
 
-The developer has multiple AI CLI tools installed (e.g., both claude and gemini), or they prefer a specific one. They can configure preflight to use a particular provider, either via a project-level config file or a global user config file. Without any configuration, preflight auto-detects and uses the first available supported tool.
+The developer has multiple AI CLI tools installed (e.g., both claude and codex), or they prefer a specific one. They can configure preflight to use a particular provider, either via a project-level config file or a global user config file. Without any configuration, preflight auto-detects and uses the first available supported tool.
 
 **Why this priority**: Different developers use different AI tools. The auto-detect default removes friction for first-time users; explicit configuration satisfies power users.
 
@@ -138,7 +138,7 @@ The developer has multiple AI CLI tools installed (e.g., both claude and gemini)
 - **Diff**: The set of code changes between the local branch tip and its upstream, collected at push time. Represents the unit of work submitted for review.
 - **Review**: The structured output from the AI tool, containing findings categorized by severity (at minimum: critical vs. non-critical).
 - **Finding**: A single issue identified by the AI. Has a severity level, a description, and ideally a reference to the relevant code location.
-- **Provider**: A locally installed AI CLI tool that preflight can invoke as a subprocess. Examples: claude, codex, gemini, qwen.
+- **Provider**: A locally installed AI CLI tool that preflight can invoke as a subprocess. Examples: claude, codex.
 - **Configuration**: Settings that control tool behavior. Exists at two scopes — project-level (checked into the repository or local to the project) and global user-level.
 
 ## Success Criteria *(mandatory)*
@@ -154,7 +154,7 @@ The developer has multiple AI CLI tools installed (e.g., both claude and gemini)
 
 ## Assumptions
 
-- The developer already has at least one supported AI CLI tool (claude, codex, gemini, or qwen) installed and authenticated on their machine before running preflight.
+- The developer already has at least one supported AI CLI tool (claude or codex) installed and authenticated on their machine before running preflight.
 - "Critical issue" is determined entirely by the AI tool's output. preflight's responsibility is to surface the AI's severity classification faithfully, not to define what constitutes a critical issue.
 - The AI CLI tools accept diff content as stdin and produce structured output (e.g., JSON) that preflight can parse for severity classification.
 - The tool targets individual developer workstations (local use before push); multi-user or server-side automation scenarios are out of scope for this version.

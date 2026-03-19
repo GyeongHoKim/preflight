@@ -11,7 +11,7 @@
 - `make` — `make --version`
 - golangci-lint — `golangci-lint --version` (or `make setup` installs it)
 - Node.js + npm (for lefthook) — `node --version`
-- At least one of: `claude`, `codex`, `gemini`, `qwen` installed and authenticated
+- At least one of: `claude`, `codex` installed and authenticated
 
 ---
 
@@ -88,8 +88,6 @@ preflight/
 │   │   ├── runner.go             # Runner interface + auto-detection
 │   │   ├── claude.go             # claude-specific invocation + response parsing
 │   │   ├── codex.go              # codex-specific invocation + response parsing
-│   │   ├── gemini.go             # gemini-specific invocation + response parsing
-│   │   ├── qwen.go               # qwen-specific invocation + response parsing
 │   │   └── runner_test.go        # Unit tests with MockRunner
 │   ├── review/                   # Review result types and parsing
 │   │   ├── review.go             # Finding, Review, severity ranking

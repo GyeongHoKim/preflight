@@ -24,14 +24,16 @@ type canonicalPayload struct {
 		Message  string `json:"message"`
 		Location string `json:"location"`
 	} `json:"findings"`
-	Blocking bool   `json:"blocking"`
-	Summary  string `json:"summary"`
+	Blocking   bool    `json:"blocking"`
+	Summary    string  `json:"summary"`
+	Verdict    string  `json:"verdict"`
+	Confidence float64 `json:"confidence"`
 }
 
-// CanonicalJSON builds the canonical review JSON (findings, blocking, summary).
-// Use with provider envelopes (ClaudeEnvelope, GeminiEnvelope, etc.).
-func CanonicalJSON(summary string, blocking bool, findings []FindingSpec) []byte {
-	payload := canonicalPayload{Summary: summary, Blocking: blocking}
+// CanonicalJSON builds canonical review JSON including verdict and confidence.
+// Use with provider envelopes (ClaudeEnvelope, CodexEnvelope, etc.).
+func CanonicalJSON(summary string, blocking bool, findings []FindingSpec, verdict string, confidence float64) []byte {
+	payload := canonicalPayload{Summary: summary, Blocking: blocking, Verdict: verdict, Confidence: confidence}
 	for _, f := range findings {
 		payload.Findings = append(payload.Findings, struct {
 			Severity string `json:"severity"`
@@ -48,17 +50,6 @@ func CanonicalJSON(summary string, blocking bool, findings []FindingSpec) []byte
 func ClaudeEnvelope(inner []byte) review.ProviderResult {
 	b, _ := json.Marshal(map[string]string{"type": "result", "result": string(inner)})
 	return review.ProviderResult{Stdout: b}
-}
-
-// GeminiEnvelope wraps inner JSON in the gemini CLI envelope (response field).
-func GeminiEnvelope(inner []byte) review.ProviderResult {
-	b, _ := json.Marshal(map[string]interface{}{"response": string(inner), "stats": map[string]interface{}{}})
-	return review.ProviderResult{Stdout: b}
-}
-
-// QwenEnvelope wraps inner JSON in the qwen CLI envelope (same as claude: result).
-func QwenEnvelope(inner []byte) review.ProviderResult {
-	return ClaudeEnvelope(inner)
 }
 
 // CodexEnvelope wraps inner JSON in a codex-style envelope with the given top-level field.
@@ -81,12 +72,8 @@ func Empty() review.ProviderResult {
 // CleanReview returns a ProviderResult that parses to a clean review (no findings, non-blocking)
 // for the given provider. Use in hook tests when a successful parse is needed.
 func CleanReview(provider string) review.ProviderResult {
-	inner := CanonicalJSON("all good", false, nil)
+	inner := CanonicalJSON("all good", false, nil, review.VerdictCorrect, 0.9)
 	switch provider {
-	case "gemini":
-		return GeminiEnvelope(inner)
-	case "qwen":
-		return QwenEnvelope(inner)
 	case "codex", "unknown":
 		return CodexEnvelope(inner, "result")
 	default:

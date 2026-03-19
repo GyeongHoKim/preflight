@@ -2,7 +2,7 @@
 
 > AI-powered code review in your terminal, before you push.
 
-**preflight** runs an AI code review on your staged diff using locally installed AI CLI tools — no API tokens required. Works with your existing subscription to Claude, ChatGPT/Codex, Gemini, or Qwen.
+**preflight** runs an AI code review on your staged diff using locally installed AI CLI tools — no API tokens required. Works with your existing subscription to Claude or ChatGPT/Codex.
 
 ```
 $ git push origin main
@@ -43,12 +43,10 @@ preflight fills that gap: it runs entirely on your local machine using the CLI t
 
 One of the following CLI tools installed and authenticated:
 
-| Provider  | CLI                                                     | Authentication       |
-| --------- | ------------------------------------------------------- | -------------------- |
-| Anthropic | [`claude`](https://code.claude.com)                     | Claude subscription  |
-| OpenAI    | [`codex`](https://developers.openai.com/codex/cli)      | ChatGPT subscription |
-| Google    | [`gemini`](https://github.com/google-gemini/gemini-cli) | Gemini account       |
-| Alibaba   | [`qwen`](https://github.com/QwenLM/qwen-code)           | Qwen account         |
+| Provider  | CLI                                                | Authentication       |
+| --------- | -------------------------------------------------- | -------------------- |
+| Anthropic | [`claude`](https://code.claude.com)                | Claude subscription  |
+| OpenAI    | [`codex`](https://developers.openai.com/codex/cli) | ChatGPT subscription |
 
 ---
 
@@ -173,7 +171,7 @@ Create `.preflight.yml` in your repository root (or `~/.config/preflight/.prefli
 
 ```yaml
 # .preflight.yml
-provider: claude # claude | codex | gemini | qwen | auto
+provider: claude # claude | codex | auto
 
 # Severity threshold for blocking a push.
 # INFO and WARNING show in the TUI but never block.
@@ -214,7 +212,7 @@ Commands:
   check       Verify that a supported AI CLI is installed and authenticated
 
 Flags:
-  --provider string   AI provider to use (claude, codex, gemini, qwen)
+  --provider string   AI provider to use (claude, codex)
   --force             Push even if CRITICAL issues are found
   --no-tui            Print results as plain text (useful for CI or pipes)
   --config string     Path to config file (default: ./.preflight.yml)
@@ -261,16 +259,14 @@ The diff never leaves your machine except to the AI CLI, which uses your existin
 
 ## Supported Providers
 
-| Provider  | CLI                                                     | Non-interactive    | JSON output flag              |
-| --------- | ------------------------------------------------------- | ------------------ | ----------------------------- |
-| Anthropic | [`claude`](https://code.claude.com)                     | `claude -p "..."`  | `--output-format json`        |
-| OpenAI    | [`codex`](https://developers.openai.com/codex/cli)      | `codex exec "..."` | `--output-schema schema.json` |
-| Google    | [`gemini`](https://github.com/google-gemini/gemini-cli) | `gemini -p "..."`  | `--output-format json`        |
-| Alibaba   | [`qwen`](https://github.com/QwenLM/qwen-code)           | `qwen -p "..."`    | `--output-format json`        |
+| Provider  | CLI                                                | Non-interactive    | JSON output flag              |
+| --------- | -------------------------------------------------- | ------------------ | ----------------------------- |
+| Anthropic | [`claude`](https://code.claude.com)                | `claude -p "..."`  | `--output-format json`        |
+| OpenAI    | [`codex`](https://developers.openai.com/codex/cli) | `codex exec "..."` | `--output-schema schema.json` |
 
-All four providers support structured JSON output in non-interactive mode. Schema enforcement varies by provider and is treated as best-effort — if the response doesn't parse against the expected schema, preflight shows the raw response in the TUI and lets you decide whether to block or continue.
+Both providers support structured JSON output in non-interactive mode. Schema enforcement is treated as best-effort — if the response doesn't parse against the expected schema, preflight shows the raw response in the TUI and lets you decide whether to block or continue.
 
-Provider is auto-detected in order: `claude` → `codex` → `gemini` → `qwen`. Override with `--provider` or the config file.
+Provider is auto-detected in order: `claude` → `codex`. Override with `--provider` or the config file.
 
 ---
 
@@ -280,7 +276,7 @@ Provider is auto-detected in order: `claude` → `codex` → `gemini` → `qwen`
 No. preflight uses locally installed CLI tools that authenticate with your existing subscription (Claude, ChatGPT, etc.). No API key or token is needed.
 
 **Can I use this in CI?**
-No. preflight is designed exclusively for local developer use — it relies on your personally authenticated AI CLI session, which is not available in CI environments. For AI-assisted code review in CI, refer to the official API documentation for your provider: [Claude](https://docs.anthropic.com/en/docs/about-claude/models/overview), [OpenAI](https://platform.openai.com/docs/guides/code-review), [Gemini](https://ai.google.dev/gemini-api/docs).
+No. preflight is designed exclusively for local developer use — it relies on your personally authenticated AI CLI session, which is not available in CI environments. For AI-assisted code review in CI, refer to the official API documentation for your provider: [Claude](https://docs.anthropic.com/en/docs/about-claude/models/overview), [OpenAI](https://platform.openai.com/docs/guides/code-review).
 
 **What if the AI CLI is slow or unavailable?**
 preflight has a configurable timeout (default: 60s). If the review times out or the CLI is not found, preflight warns and exits 0 — it will never silently block a push due to a tool failure.

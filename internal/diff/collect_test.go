@@ -1,6 +1,7 @@
 package diff
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -57,6 +58,17 @@ func TestParsePushInfo_InvalidLine(t *testing.T) {
 	input := "only-two fields\n"
 	_, err := ParsePushInfo(strings.NewReader(input))
 	require.Error(t, err)
+}
+
+func TestMergeBaseWith_NoValidCandidates(t *testing.T) {
+	// Non-existent refs must all fail, returning an empty string (triggers tip-commit fallback).
+	result := mergeBaseWith(context.Background(), "HEAD", []string{"origin/nonexistent-ref-xyzzy"})
+	assert.Equal(t, "", result)
+}
+
+func TestMergeBaseWith_EmptyCandidates(t *testing.T) {
+	result := mergeBaseWith(context.Background(), "HEAD", nil)
+	assert.Equal(t, "", result)
 }
 
 func TestIsGitRepo(t *testing.T) {
