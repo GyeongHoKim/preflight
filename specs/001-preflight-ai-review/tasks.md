@@ -124,7 +124,7 @@
 
 **Goal**: Developer can select a provider via config file or `--provider` flag; auto-detection tries providers in order; project config overrides global.
 
-**Independent Test**: Create `preflight.yml` with `provider: gemini`; run `preflight run`; observe gemini binary is invoked (visible via verbose flag or process list).
+**Independent Test**: Create `.preflight.yml` with `provider: gemini`; run `preflight run`; observe gemini binary is invoked (visible via verbose flag or process list).
 
 - [x] T034 [US6] Implement `GeminiRunner` in `internal/provider/gemini.go` — invokes `gemini --prompt "<prompt>" --output-format json` with diff embedded in prompt string; parses `response` field from JSON envelope; handles exit codes 42 and 53 as fail-open; write tests in `internal/provider/runner_test.go`
 - [x] T035 [P] [US6] Implement `CodexRunner` in `internal/provider/codex.go` — invokes `codex -q --json "<prompt + diff>"`; for diffs exceeding 100 KB, write diff to a temp file using `os.CreateTemp("", "preflight-diff-*")` with `defer os.Remove(path)` and embed `"\n\nSee diff content in: <path>"` at the end of the prompt string; best-effort JSON parse of stdout (try candidate fields in order: `output`, `response`, `content`, `result`; fall back to raw stdout if none match); write tests

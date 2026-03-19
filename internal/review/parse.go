@@ -16,8 +16,46 @@ type rawReview struct {
 	Summary  string `json:"summary"`
 }
 
+// extractEnvelopePayload returns the inner review payload from a provider's JSON envelope.
+// Per provider contract: claude/qwen use "result", gemini uses "response".
+// Codex and "unknown" (auto) have no documented envelope; we try common field names.
+func extractEnvelopePayload(providerName string, data []byte) []byte {
+	var outer map[string]json.RawMessage
+	if err := json.Unmarshal(data, &outer); err != nil {
+		return nil
+	}
+
+	var fields []string
+	switch providerName {
+	case "claude", "qwen":
+		// https://code.claude.com/docs/en/cli-reference; qwen-code shares same schema.
+		fields = []string{"result"}
+	case "gemini":
+		// https://github.com/google-gemini/gemini-cli docs: --output-format json → "response".
+		fields = []string{"response"}
+	case "codex", "unknown":
+		// codex exec --json schema not officially documented (contract: try common fields).
+		fields = []string{"result", "response", "output", "content"}
+	default:
+		fields = []string{"result", "response", "output", "content"}
+	}
+
+	for _, field := range fields {
+		v, ok := outer[field]
+		if !ok {
+			continue
+		}
+		var s string
+		if json.Unmarshal(v, &s) == nil && s != "" {
+			return []byte(s)
+		}
+		return v
+	}
+	return nil
+}
+
 // ParseReview parses a canonical review JSON payload into a Review.
-// providerName is used to populate Review.Provider.
+// providerName is used to populate Review.Provider and to select the envelope field per provider docs.
 // If the payload is nil or malformed, ParseReview returns nil, nil (fail-open).
 func ParseReview(providerName string, raw ProviderResult) (*Review, error) {
 	if len(raw.Stdout) == 0 {
@@ -25,23 +63,8 @@ func ParseReview(providerName string, raw ProviderResult) (*Review, error) {
 	}
 
 	data := raw.Stdout
-
-	// Attempt to unwrap a provider envelope if the outer object has no "findings" key.
-	// Try common envelope fields: result, response, output, content.
-	var outer map[string]json.RawMessage
-	if err := json.Unmarshal(data, &outer); err == nil {
-		for _, field := range []string{"result", "response", "output", "content"} {
-			if v, ok := outer[field]; ok {
-				// The value may be a JSON string containing nested JSON, or an object.
-				var s string
-				if json.Unmarshal(v, &s) == nil && s != "" {
-					data = []byte(s)
-					break
-				}
-				data = v
-				break
-			}
-		}
+	if payload := extractEnvelopePayload(providerName, raw.Stdout); len(payload) > 0 {
+		data = payload
 	}
 
 	var r rawReview

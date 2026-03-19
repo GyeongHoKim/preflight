@@ -27,7 +27,7 @@ Key design points:
 - **stdout / stderr / exit code contract**: stdout = TUI or plain-text results; stderr = errors and warnings; exit 0 = clean, exit 1 = blocking issues or internal error, exit 2 = usage error.
 - **Fail-open on tool unavailability**: if the AI CLI is not found or times out, preflight MUST exit 0 and emit a warning to stderr — it must never silently block a push due to a tool failure.
 - **Provider auto-detection**: tried in order `claude → codex → gemini → qwen`; overridable via `--provider` or config file.
-- **Config resolution**: project-level `preflight.yml` overrides global `~/.config/preflight/config.yml`.
+- **Config resolution**: project-level `.preflight.yml` overrides global `~/.config/preflight/.preflight.yml`.
 
 ## Non-Negotiable Rules (from `.specify/memory/constitution.md`)
 

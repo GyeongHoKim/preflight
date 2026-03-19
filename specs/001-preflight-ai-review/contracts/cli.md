@@ -75,7 +75,7 @@ Prints the version string.
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--config` | string | `""` | Path to config file. Resolved if empty: `./preflight.yml` → `~/.config/preflight/config.yml` |
+| `--config` | string | `""` | Path to config file. Resolved if empty: `./.preflight.yml` → `~/.config/preflight/.preflight.yml` |
 | `--no-tui` | bool | false | Disable terminal UI; write plain text to stdout |
 | `--verbose` | bool | false | Emit debug information to stderr |
 
@@ -167,12 +167,12 @@ For `claude`, use `--json-schema` to enforce this schema at the CLI level. For o
 
 **Location resolution order** (first match wins):
 1. `--config` flag value
-2. `./preflight.yml` in the current working directory
-3. `~/.config/preflight/config.yml`
+2. `./.preflight.yml` in the current working directory
+3. `~/.config/preflight/.preflight.yml`
 
 **YAML schema:**
 ```yaml
-# preflight.yml
+# .preflight.yml
 provider: auto          # auto | claude | codex | gemini | qwen
 block_on: critical      # critical | warning
 timeout: 60s            # Go duration string

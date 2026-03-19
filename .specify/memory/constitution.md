@@ -124,8 +124,8 @@ and lowers the maintenance burden.
   Homebrew tap (`GyeongHoKim/tap/preflight`), and `go install`
 - **Supported AI providers**: `claude`, `codex`, `gemini`, `qwen` (invoked as
   subprocess; no direct API usage by preflight itself)
-- **Configuration**: `preflight.yml` (project-level) or
-  `~/.config/preflight/config.yml` (global)
+- **Configuration**: `.preflight.yml` (project-level) or
+  `~/.config/preflight/.preflight.yml` (global)
 
 ## Quality Gates
 
