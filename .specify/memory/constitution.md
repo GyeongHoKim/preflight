@@ -93,12 +93,14 @@ The CLI MUST follow these I/O conventions:
 - **Exit codes**: `0` = success / no blocking issues; `1` = blocking issues found or
   internal error; `2` = usage/argument error.
 - `--no-tui` flag MUST produce machine-parseable plain text output suitable for
-  pipes and CI environments.
+  users who prefer not to use the TUI, for piping or saving output locally, and
+  for terminals with limited or unreliable color and rich-text support.
 - The tool MUST exit `0` (never block silently) when the AI CLI is unavailable or
   times out — a warning MUST be emitted to stderr.
 
-**Rationale**: preflight runs non-interactively as a git hook. Predictable I/O
-contracts let users integrate it reliably into scripts, CI, and hook managers.
+**Rationale**: preflight runs as a git hook and must behave predictably on the
+developer machine. Predictable I/O contracts let users integrate it reliably into
+local scripts and hook managers.
 
 ### V. Simplicity & Minimal Dependencies
 

@@ -43,7 +43,7 @@ Removes the preflight pre-push hook.
 
 ### `preflight run [--provider P] [--no-tui] [--timeout D]`
 
-Runs a code review manually against the current branch's diff, without waiting for a `git push`. Useful for testing and CI.
+Runs a code review manually against the current branch's diff, without waiting for a `git push`. Useful for local testing, piping output, and reproducing hook behavior on the developer machine.
 
 **Flags:**
 

@@ -34,7 +34,7 @@ preflight is a Go CLI tool that installs as a git pre-push hook. On every `git p
 | I. Go Standards Compliance | ✅ PASS | All exported symbols will have doc comments; naming follows Go conventions; imports grouped stdlib→external→internal |
 | II. Zero-Lint Policy | ✅ PASS | golangci-lint runs via `make lint` after every change |
 | III. Explicit Error Handling | ✅ PASS | Runner interface returns explicit errors; all subprocess errors wrapped with `fmt.Errorf("...: %w", err)`; fail-open logic explicit |
-| IV. CLI Interface Design | ✅ PASS | stdout=TUI/plain-text, stderr=errors; exit 0/1/2 contract defined; `--no-tui` for CI; fail-open on AI unavailability |
+| IV. CLI Interface Design | ✅ PASS | stdout=TUI/plain-text, stderr=errors; exit 0/1/2 contract defined; `--no-tui` for plain-text / limited terminals; fail-open on AI unavailability |
 | V. Simplicity & Minimal Dependencies | ✅ PASS | 6 external deps, each justified; yaml.v3 instead of viper; stdlib for exec/json/io; no util/helpers packages |
 
 **No violations.** Complexity Tracking section not required.

@@ -1,0 +1,35 @@
+---
+description: Project Development Guidelines
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# preflight Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-03-19
+
+## Active Technologies
+
+- Go 1.26.x (matches repo `go.mod`) + `charm.land/bubbletea/v2`, Lipgloss v2 (`github.com/charmbracelet/lipgloss/v2` or `charm.land/lipgloss/v2` — lock one in `go.mod`); existing cobra, go-isatty, testify, yaml.v3 (002-animated-waiting-spinner)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for Go 1.26.x (matches repo `go.mod`)
+
+## Code Style
+
+Go 1.26.x (matches repo `go.mod`): Follow standard conventions
+
+## Recent Changes
+
+- 002-animated-waiting-spinner: Added Go 1.26.x (matches repo `go.mod`) + `charm.land/bubbletea/v2`, Lipgloss v2 (`github.com/charmbracelet/lipgloss/v2` or `charm.land/lipgloss/v2` — lock one in `go.mod`); existing cobra, go-isatty, testify, yaml.v3
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

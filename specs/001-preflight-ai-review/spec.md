@@ -3,7 +3,7 @@
 **Feature Branch**: `001-preflight-ai-review`
 **Created**: 2026-03-18
 **Status**: Draft
-**Input**: User description: "Build a git pre-push hook tool called preflight. When a developer runs `git push`, preflight intercepts the push, collects the diff between the local branch and its upstream, and sends it to a locally installed AI CLI tool for code review. The review result is displayed in a terminal UI so the developer can read the feedback before the push completes. If the AI identifies a critical issue, the push is blocked by default. The developer can choose to override the block and push anyway, or cancel the push to address the issues first. The goal is to help individual developers catch serious problems — security risks, silent error discarding, logic bugs — before code leaves their machine, without requiring any API tokens or CI infrastructure."
+**Input**: User description: "Build a git pre-push hook tool called preflight. When a developer runs `git push`, preflight intercepts the push, collects the diff between the local branch and its upstream, and sends it to a locally installed AI CLI tool for code review. The review result is displayed in a terminal UI so the developer can read the feedback before the push completes. If the AI identifies a critical issue, the push is blocked by default. The developer can choose to override the block and push anyway, or cancel the push to address the issues first. The goal is to help individual developers catch serious problems — security risks, silent error discarding, logic bugs — before code leaves their machine, without requiring any API tokens. preflight is intended for local developer workstations only — developers who prefer to validate changes on their own machine before pushing, not for automated server-side pipelines."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -72,13 +72,13 @@ A developer discovers preflight and wants to start using it. They install the bi
 
 ---
 
-### User Story 5 — Headless / CI Mode (Priority: P5)
+### User Story 5 — Plain-Text Output (`--no-tui`) (Priority: P5)
 
-A developer or automation script runs `git push` in a non-interactive environment (CI pipeline, script, terminal with no TTY). preflight detects the non-interactive context, skips the visual terminal UI, and outputs a plain-text review summary to standard output. The exit code contract remains the same.
+A developer prefers not to use the full-screen terminal UI, or their terminal is old or limited (no reliable color or rich display). They may also run `git push` from a local script or pipe output to a file. In these cases they use `--no-tui` (or have no TTY attached), and preflight skips the Bubbletea UI and writes a plain-text review summary to standard output. The exit code contract remains the same.
 
-**Why this priority**: Developers who use preflight locally often also run pushes in scripts. The terminal UI must not hang or corrupt output in non-interactive contexts.
+**Why this priority**: Not every local environment suits a TUI; plain text must remain readable, script-friendly, and free of animation or styling artifacts.
 
-**Independent Test**: Run `git push` with `preflight --no-tui` (or equivalent CI flag) and pipe the output to a file; confirm the file contains a readable plain-text summary and the process exits with the correct exit code.
+**Independent Test**: Run preflight with `--no-tui` and pipe stdout to a file; confirm the file contains a readable plain-text summary and the process exits with the correct exit code.
 
 **Acceptance Scenarios**:
 
@@ -125,7 +125,7 @@ The developer has multiple AI CLI tools installed (e.g., both claude and gemini)
 - **FR-005**: When the AI identifies a critical issue, the tool MUST block the push by default.
 - **FR-006**: When a push is blocked, the developer MUST be able to choose: (a) push anyway with override, or (b) cancel the push to fix the issue.
 - **FR-007**: When no supported AI CLI is found or the AI CLI times out, the tool MUST exit `0` and emit a warning to stderr — it MUST NOT silently block the push.
-- **FR-008**: The tool MUST support a `--no-tui` flag that produces plain-text output suitable for non-interactive and CI environments.
+- **FR-008**: The tool MUST support a `--no-tui` flag that produces plain-text output suitable for users who opt out of the TUI, for piping or logging on the local machine, and for terminals that do not reliably support the interactive UI or colors.
 - **FR-009**: The tool MUST auto-detect available AI providers in a defined order and use the first one found.
 - **FR-010**: The tool MUST allow the user to specify a preferred AI provider via `--provider` flag or a configuration file.
 - **FR-011**: Project-level configuration MUST override global user configuration.
@@ -157,6 +157,6 @@ The developer has multiple AI CLI tools installed (e.g., both claude and gemini)
 - The developer already has at least one supported AI CLI tool (claude, codex, gemini, or qwen) installed and authenticated on their machine before running preflight.
 - "Critical issue" is determined entirely by the AI tool's output. preflight's responsibility is to surface the AI's severity classification faithfully, not to define what constitutes a critical issue.
 - The AI CLI tools accept diff content as stdin and produce structured output (e.g., JSON) that preflight can parse for severity classification.
-- The tool targets individual developer workstations, not shared CI agents; multi-user or concurrent-hook scenarios are out of scope for this version.
+- The tool targets individual developer workstations (local use before push); multi-user or server-side automation scenarios are out of scope for this version.
 - Supported platforms are macOS and Linux (Windows support is out of scope for this version).
 - The configuration file format uses YAML for both project-level and global configs.
