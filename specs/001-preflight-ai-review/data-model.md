@@ -63,7 +63,7 @@ Information extracted from the git pre-push hook's stdin, describing what is bei
 
 ### Config
 
-User-controlled settings loaded from `preflight.yml` (project) or `~/.config/preflight/config.yml` (global). Project-level takes precedence.
+User-controlled settings loaded from `.preflight.yml` (project) or `~/.config/preflight/.preflight.yml` (global). Project-level takes precedence.
 
 | Field | YAML key | Type | Default | Description |
 |-------|----------|------|---------|-------------|

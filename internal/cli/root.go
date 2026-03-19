@@ -74,8 +74,8 @@ func buildRootCmd() *cobra.Command {
 
 // loadConfig resolves and validates configuration for the run.
 func loadConfig(_ *cobra.Command) error {
-	projectPath := "./preflight.yml"
-	globalPath := os.ExpandEnv("$HOME/.config/preflight/config.yml")
+	projectPath := "./.preflight.yml"
+	globalPath := os.ExpandEnv("$HOME/.config/preflight/.preflight.yml")
 
 	if globalFlags.configPath != "" {
 		projectPath = globalFlags.configPath

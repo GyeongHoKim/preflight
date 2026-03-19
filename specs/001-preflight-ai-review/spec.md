@@ -94,7 +94,7 @@ The developer has multiple AI CLI tools installed (e.g., both claude and gemini)
 
 **Why this priority**: Different developers use different AI tools. The auto-detect default removes friction for first-time users; explicit configuration satisfies power users.
 
-**Independent Test**: Create a project-level `preflight.yml` specifying a provider, run `git push`, and confirm preflight uses the specified provider (verifiable via process list or log output).
+**Independent Test**: Create a project-level `.preflight.yml` specifying a provider, run `git push`, and confirm preflight uses the specified provider (verifiable via process list or log output).
 
 **Acceptance Scenarios**:
 

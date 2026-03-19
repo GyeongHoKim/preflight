@@ -169,10 +169,10 @@ preflight run
 
 ## Configuration
 
-Create `preflight.yml` in your repository root (or `~/.config/preflight/config.yml` for global config):
+Create `.preflight.yml` in your repository root (or `~/.config/preflight/.preflight.yml` for global config):
 
 ```yaml
-# preflight.yml
+# .preflight.yml
 provider: claude # claude | codex | gemini | qwen | auto
 
 # Severity threshold for blocking a push.
@@ -217,7 +217,7 @@ Flags:
   --provider string   AI provider to use (claude, codex, gemini, qwen)
   --force             Push even if CRITICAL issues are found
   --no-tui            Print results as plain text (useful for CI or pipes)
-  --config string     Path to config file (default: ./preflight.yml)
+  --config string     Path to config file (default: ./.preflight.yml)
 ```
 
 **Run a review without pushing:**

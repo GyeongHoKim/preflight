@@ -1,0 +1,27 @@
+# .preflight-example.yml
+#
+# Copy this file to .preflight.yml in your repository root,
+# or to ~/.config/preflight/.preflight.yml for a global default.
+# All fields are optional — unset fields fall back to the defaults shown below.
+
+# AI provider to use for code review.
+# auto: tries claude → codex → gemini → qwen in order, using the first found.
+# provider: auto  # auto | claude | codex | gemini | qwen
+
+# Minimum severity that blocks a push.
+# critical: only CRITICAL findings block (default).
+# warning:  CRITICAL and WARNING findings both block.
+# block_on: critical  # critical | warning
+
+# Maximum time to wait for the AI CLI to respond.
+# timeout: 60s
+
+# Maximum diff size in bytes. Diffs larger than this are truncated with a warning.
+# 524288 = 512 KB
+# max_diff_bytes: 524288
+
+# Extra instructions appended to the review prompt.
+# Use this to give the AI context specific to your project.
+# prompt_extra: |
+#   This is a Go service. Focus on data races, error handling, and context propagation.
+#   We follow the Uber Go style guide.

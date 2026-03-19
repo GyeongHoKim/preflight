@@ -295,7 +295,7 @@ Use `github.com/spf13/cobra` for command parsing.
 - `--provider string` (default `"auto"`) — enum: auto/claude/codex/gemini/qwen
 - `--no-tui bool` — plain-text output
 - `--timeout duration` (default `60s`) — max time for AI CLI
-- `--config string` — path to config file (default: `preflight.yml`, then `~/.config/preflight/config.yml`)
+- `--config string` — path to config file (default: `.preflight.yml`, then `~/.config/preflight/.preflight.yml`)
 - `--block-on string` (default `"critical"`) — severity threshold
 
 ### 4.2 yaml.v3 (not viper)

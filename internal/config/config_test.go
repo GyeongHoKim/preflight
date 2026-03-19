@@ -27,14 +27,14 @@ func TestLoad_Defaults(t *testing.T) {
 }
 
 func TestLoad_MissingFile(t *testing.T) {
-	cfg, err := Load("/nonexistent/path/preflight.yml", "/also/nonexistent.yml")
+	cfg, err := Load("/nonexistent/path/.preflight.yml", "/also/nonexistent/.preflight.yml")
 	require.NoError(t, err)
 	assert.Equal(t, "auto", cfg.Provider)
 }
 
 func TestLoad_ValidYAML(t *testing.T) {
 	dir := t.TempDir()
-	path := writeYAML(t, dir, "preflight.yml", `
+	path := writeYAML(t, dir, ".preflight.yml", `
 provider: claude
 block_on: warning
 timeout: 30s
@@ -65,7 +65,7 @@ provider: claude
 
 func TestLoad_InvalidProvider(t *testing.T) {
 	dir := t.TempDir()
-	path := writeYAML(t, dir, "preflight.yml", `provider: invalid`)
+	path := writeYAML(t, dir, ".preflight.yml", `provider: invalid`)
 	_, err := Load(path, "")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid provider")
@@ -73,7 +73,7 @@ func TestLoad_InvalidProvider(t *testing.T) {
 
 func TestLoad_InvalidBlockOn(t *testing.T) {
 	dir := t.TempDir()
-	path := writeYAML(t, dir, "preflight.yml", `block_on: none`)
+	path := writeYAML(t, dir, ".preflight.yml", `block_on: none`)
 	_, err := Load(path, "")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid block_on")
