@@ -61,46 +61,7 @@ The useful content is in `result`. When `--json-schema` is used, `result` is alr
 
 ---
 
-### 1.2 Gemini (`gemini` / gemini-cli)
-
-**Decision**: Use `gemini -p` with `--output-format json`.
-
-**Invocation flags** (sourced from https://github.com/google-gemini/gemini-cli `docs/cli/headless.md`):
-
-| Flag | Purpose |
-|------|---------|
-| `-p` / `--prompt "..."` | Non-interactive headless mode |
-| `--output-format json` | Single JSON object response |
-| `--output-format stream-json` | NDJSON event stream |
-
-Headless mode also auto-activates when stdin is not a TTY.
-
-**`--output-format json` response schema:**
-```json
-{
-  "response": "<model's final answer as string>",
-  "stats": {
-    "<token usage and API latency metrics>"
-  },
-  "error": {
-    "<optional — present only on failure>"
-  }
-}
-```
-The useful content is in `response`. Since `response` is a plain string, the model must be prompted to output JSON within that string.
-
-**Exit codes**: `0`=success, `1`=error, `42`=input error, `53`=turn limit exceeded.
-
-**Recommended invocation:**
-```bash
-git diff <remote>..<local> | gemini --prompt "$(cat system-prompt.txt)" --output-format json
-```
-
-**Rationale**: `--output-format json` gives a stable envelope. Parse `response`, then attempt JSON parse of its content. Fall back gracefully if `response` is not valid JSON.
-
----
-
-### 1.3 Codex (`codex` / openai-codex)
+### 1.2 Codex (`codex` / openai-codex)
 
 **Decision**: Use `codex -q` (quiet mode) with `--json`.
 
@@ -123,38 +84,18 @@ codex -q --json "Review the following diff for critical issues. Output JSON only
 
 ---
 
-### 1.4 Qwen (`qwen` / qwen-code)
+### 1.3 Provider Auto-Detection Order
 
-**Decision**: Use `qwen -p` — same interface as `claude` (qwen-code is derived from claude-code).
-
-**Invocation flags** (sourced from https://github.com/QwenLM/qwen-code README):
-
-| Flag | Purpose |
-|------|---------|
-| `-p "..."` | Non-interactive print mode |
-| `--output-format json` | JSON output (same as claude-code) |
-
-The qwen-code CLI shares the same codebase architecture as claude-code. The `--output-format json` response schema is expected to be identical to claude's.
-
-**Recommended invocation:**
-```bash
-git diff <remote>..<local> | qwen -p "PROMPT" --output-format json --no-session-persistence
-```
-
----
-
-### 1.5 Provider Auto-Detection Order
-
-Try in order: `claude` → `codex` → `gemini` → `qwen`.
+Try in order: `claude` → `codex`.
 Detection via `exec.LookPath(provider)` — returns the binary path if found in `$PATH`.
 
 **Alternatives considered**: Detecting by checking `--version` output (slower, more fragile than LookPath). Rejected.
 
 ---
 
-### 1.6 Canonical Review JSON Schema (for prompt injection)
+### 1.4 Canonical Review JSON Schema (for prompt injection)
 
-When `--json-schema` is not available (gemini, codex, qwen), embed this schema in the system prompt and ask the model to conform to it:
+When `--json-schema` is not available (codex), embed this schema in the system prompt and ask the model to conform to it:
 
 ```json
 {
@@ -292,7 +233,7 @@ Use `github.com/spf13/cobra` for command parsing.
 - Root `PersistentPreRunE` — loads config, validates `--provider` enum
 
 **Key flag decisions:**
-- `--provider string` (default `"auto"`) — enum: auto/claude/codex/gemini/qwen
+- `--provider string` (default `"auto"`) — enum: auto/claude/codex
 - `--no-tui bool` — plain-text output
 - `--timeout duration` (default `60s`) — max time for AI CLI
 - `--config string` — path to config file (default: `.preflight.yml`, then `~/.config/preflight/.preflight.yml`)
@@ -304,7 +245,7 @@ Use `gopkg.in/yaml.v3` directly. The config schema has ≤5 fields; viper's mult
 
 **Config schema:**
 ```yaml
-provider: claude          # auto, claude, codex, gemini, qwen
+provider: claude          # auto, claude, codex
 block_on: critical        # critical, warning
 timeout: 60s
 prompt_extra: ""          # additional instructions appended to the system prompt

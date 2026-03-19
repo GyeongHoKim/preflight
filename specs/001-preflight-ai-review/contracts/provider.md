@@ -55,36 +55,6 @@ If `is_error` is `true`, treat as a fail-open warning.
 
 ---
 
-### gemini
-
-| Attribute | Value |
-|-----------|-------|
-| Binary name | `gemini` |
-| Non-interactive flag | `-p` / `--prompt` |
-| JSON envelope flag | `--output-format json` |
-| Schema enforcement | prompt injection only |
-| Diff delivery | stdin pipe or embedded in prompt |
-
-**Full invocation:**
-```
-gemini --prompt "<review prompt + schema instruction>" \
-  --output-format json
-```
-Diff is embedded in the prompt string (appended after the instruction text). If diff exceeds safe arg size, write to a temp file referenced by path in the prompt.
-
-**Response parsing:**
-```json
-{
-  "response": "{\"findings\":[...],\"blocking\":true,\"summary\":\"...\"}",
-  "stats": { ... }
-}
-```
-Extract `response` field. Attempt JSON parse of `response`. If `response` is not valid JSON, fall back to plain-text rendering and emit a warning.
-
-**Exit codes**: `0`=success, `1`=error (treat as fail-open), `42`=input error (treat as usage error / fail-open), `53`=turn limit (treat as fail-open).
-
----
-
 ### codex
 
 | Attribute | Value |
@@ -102,22 +72,6 @@ codex -q --json "<review prompt + schema instruction + diff>"
 No stdin piping documented. For large diffs (>100 KB), write diff to a temp file and reference its path in the prompt.
 
 **Response parsing:** Schema not officially documented. Attempt to parse full stdout as JSON. If top-level keys include a string field (e.g., `output`, `response`, `content`, or `result`), attempt to parse that field as the canonical review JSON. If unparseable, emit a warning and fail-open.
-
----
-
-### qwen
-
-| Attribute | Value |
-|-----------|-------|
-| Binary name | `qwen` |
-| Non-interactive flag | `-p` |
-| JSON envelope flag | `--output-format json` |
-| Schema enforcement | `--json-schema` (derived from claude-code) |
-| Diff delivery | stdin pipe |
-
-**Full invocation**: identical to `claude` (qwen-code shares the claude-code CLI architecture).
-
-**Response parsing**: identical to `claude`.
 
 ---
 

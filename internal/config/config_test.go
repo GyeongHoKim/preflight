@@ -51,7 +51,7 @@ max_diff_bytes: 1024
 func TestLoad_ProjectOverridesGlobal(t *testing.T) {
 	dir := t.TempDir()
 	globalPath := writeYAML(t, dir, "global.yml", `
-provider: gemini
+provider: codex
 block_on: critical
 `)
 	projectPath := writeYAML(t, dir, "project.yml", `

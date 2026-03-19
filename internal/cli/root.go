@@ -60,7 +60,7 @@ func buildRootCmd() *cobra.Command {
 	root.PersistentFlags().StringVar(&globalFlags.configPath, "config", "", "path to config file")
 	root.PersistentFlags().BoolVar(&globalFlags.noTUI, "no-tui", false, "disable terminal UI; write plain text to stdout")
 	root.PersistentFlags().BoolVar(&globalFlags.verbose, "verbose", false, "emit debug information to stderr")
-	root.PersistentFlags().StringVar(&globalFlags.provider, "provider", "", "AI provider: auto, claude, codex, gemini, qwen")
+	root.PersistentFlags().StringVar(&globalFlags.provider, "provider", "", "AI provider: auto, claude, codex")
 
 	root.AddCommand(
 		buildRunCmd(),
@@ -92,10 +92,10 @@ func loadConfig(_ *cobra.Command) error {
 		cfg.Provider = globalFlags.provider
 		// Re-validate provider.
 		validProviders := map[string]bool{
-			"auto": true, "claude": true, "codex": true, "gemini": true, "qwen": true,
+			"auto": true, "claude": true, "codex": true,
 		}
 		if !validProviders[cfg.Provider] {
-			return fmt.Errorf("preflight: invalid provider %q; must be one of auto, claude, codex, gemini, qwen", cfg.Provider)
+			return fmt.Errorf("preflight: invalid provider %q; must be one of auto, claude, codex", cfg.Provider)
 		}
 	}
 

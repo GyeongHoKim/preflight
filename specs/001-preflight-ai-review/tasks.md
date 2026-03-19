@@ -124,15 +124,13 @@
 
 **Goal**: Developer can select a provider via config file or `--provider` flag; auto-detection tries providers in order; project config overrides global.
 
-**Independent Test**: Create `.preflight.yml` with `provider: gemini`; run `preflight run`; observe gemini binary is invoked (visible via verbose flag or process list).
+**Independent Test**: Create `.preflight.yml` with `provider: codex`; run `preflight run`; observe codex binary is invoked (visible via verbose flag or process list).
 
-- [x] T034 [US6] Implement `GeminiRunner` in `internal/provider/gemini.go` — invokes `gemini --prompt "<prompt>" --output-format json` with diff embedded in prompt string; parses `response` field from JSON envelope; handles exit codes 42 and 53 as fail-open; write tests in `internal/provider/runner_test.go`
 - [x] T035 [P] [US6] Implement `CodexRunner` in `internal/provider/codex.go` — invokes `codex -q --json "<prompt + diff>"`; for diffs exceeding 100 KB, write diff to a temp file using `os.CreateTemp("", "preflight-diff-*")` with `defer os.Remove(path)` and embed `"\n\nSee diff content in: <path>"` at the end of the prompt string; best-effort JSON parse of stdout (try candidate fields in order: `output`, `response`, `content`, `result`; fall back to raw stdout if none match); write tests
-- [x] T036 [P] [US6] Implement `QwenRunner` in `internal/provider/qwen.go` — identical invocation pattern to `ClaudeRunner` (`-p --output-format json --no-session-persistence --json-schema`); write tests
 - [x] T037 [P] [US6] Update `Config.Load()` in `internal/config/config.go` to fully parse and validate all fields: `provider`, `block_on`, `timeout` (Go duration), `prompt_extra`, `max_diff_bytes`; verify project-level config correctly overrides global-level defaults; add missing test cases to `internal/config/config_test.go`
 - [x] T038 [US6] Wire provider selection end-to-end in `internal/cli/root.go` `PersistentPreRunE`: flag `--provider` overrides config `provider`; `"auto"` triggers `provider.Detect()`; invalid provider value returns exit code 2; add `--verbose` flag that logs detected provider to stderr; add table-driven test in `internal/cli/` covering priority order: (1) explicit flag beats config value, (2) config value beats auto-detect, (3) auto-detect uses first found provider, (4) invalid provider → exit 2
 
-**Checkpoint**: All 4 providers selectable via flag or config; auto-detection works; project config overrides global.
+**Checkpoint**: Both providers (claude, codex) selectable via flag or config; auto-detection works; project config overrides global.
 
 ---
 
@@ -188,7 +186,7 @@ Phase 1 (Setup)
 - **Phase 2**: T007, T008, T009, T010 are fully parallel after T006
 - **Phase 3**: T013, T014, T016 are fully parallel; T012 and T015 can proceed in parallel after T011 completes
 - **Phase 6**: US4 (T027–T030) is fully parallel with US3 and US5 work
-- **Phase 8**: T034, T035, T036, T037 are fully parallel
+- **Phase 8**: T035, T037 are fully parallel
 
 ---
 
@@ -235,4 +233,4 @@ After T010 (Runner interface + MockRunner):
 - `hook.Run()` is the single integration point — it grows across US1→US2→US3→US5 phases; keep it small and delegate to packages
 - Commit after each task or logical group; run `make lint && make test` before each commit (lefthook enforces this)
 - Stop at Phase 3 checkpoint to validate MVP before proceeding
-- All 44 tasks (T001–T043 + T044) verified to have exact file paths and follow the checklist format
+- All 43 tasks (T001–T043 + T044, excluding removed T034) verified to have exact file paths and follow the checklist format

@@ -66,12 +66,24 @@ func Detect(providers []string) (string, error) {
 }
 
 // MockRunner is a test double for Runner that returns configurable results.
+// If Results is non-empty, it is used as a sequence (one entry per call);
+// the last entry is repeated if calls exceed len(Results). Otherwise Result is used.
 type MockRunner struct {
-	Result review.ProviderResult
-	Err    error
+	Result    review.ProviderResult
+	Results   []review.ProviderResult // sequence mode; overrides Result when non-empty
+	Err       error
+	CallCount int
 }
 
 // Run implements Runner.
 func (m *MockRunner) Run(_ context.Context, _ []byte) (review.ProviderResult, error) {
+	m.CallCount++
+	if len(m.Results) > 0 {
+		idx := m.CallCount - 1
+		if idx >= len(m.Results) {
+			idx = len(m.Results) - 1
+		}
+		return m.Results[idx], m.Err
+	}
 	return m.Result, m.Err
 }

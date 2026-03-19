@@ -15,8 +15,6 @@ var validProviders = map[string]bool{
 	"auto":   true,
 	"claude": true,
 	"codex":  true,
-	"gemini": true,
-	"qwen":   true,
 }
 
 // validBlockOn is the set of allowed block_on values.
@@ -85,7 +83,7 @@ func mergeFile(cfg *Config, path string) error {
 // validate checks that all Config fields have legal values.
 func validate(cfg *Config) error {
 	if !validProviders[cfg.Provider] {
-		return fmt.Errorf("config: invalid provider %q; must be one of auto, claude, codex, gemini, qwen", cfg.Provider)
+		return fmt.Errorf("config: invalid provider %q; must be one of auto, claude, codex", cfg.Provider)
 	}
 	if !validBlockOn[cfg.BlockOn] {
 		return fmt.Errorf("config: invalid block_on %q; must be critical or warning", cfg.BlockOn)
