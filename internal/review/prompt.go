@@ -5,7 +5,7 @@ import "fmt"
 // reviewSchema is the canonical JSON schema for AI review responses.
 const reviewSchema = `{
   "type": "object",
-  "required": ["findings", "blocking", "summary"],
+  "required": ["findings", "blocking", "summary", "verdict", "confidence"],
   "properties": {
     "findings": {
       "type": "array",
@@ -21,7 +21,9 @@ const reviewSchema = `{
       }
     },
     "blocking": {"type": "boolean"},
-    "summary": {"type": "string"}
+    "summary": {"type": "string"},
+    "verdict": {"type": "string", "enum": ["patch is correct", "patch is incorrect"]},
+    "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0}
   }
 }`
 
