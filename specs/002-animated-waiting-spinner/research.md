@@ -24,11 +24,14 @@ Follow the upstream **`UPGRADE_GUIDE_V2.md`** (key changes: `View() tea.View` in
 
 ## 2. Lipgloss v2
 
-**Decision**: Target **Lipgloss v2** via `github.com/charmbracelet/lipgloss/v2` or `charm.land/lipgloss/v2` (both list `v2.0.x`; pick one module path and use it consistently with `go mod tidy`).
+**Decision**: Target **Lipgloss v2** exclusively via **`github.com/charmbracelet/lipgloss/v2`** (`v2.0.x`). Use this import path in `go.mod`, `internal/tui`, tests, and agent docs (`CLAUDE.md`).
 
-**Rationale**: Pairs with Bubbletea v2 ecosystem; styling APIs remain `NewStyle()`, `Render()`, with layout helpers suitable for composing spinner + review layout.
+**Rationale**: Pairs with Bubbletea v2 ecosystem; styling APIs remain `NewStyle()`, `Render()`, with layout helpers suitable for composing spinner + review layout. Locking one path removes “pick one” ambiguity in tasks and CI.
 
-**Alternatives considered**: Keep Lipgloss v1 with Bubbletea v2 — **rejected**: mixed major versions increase friction and duplicate color/terminal stacks.
+**Alternatives considered**:
+
+- `charm.land/lipgloss/v2` — acceptable mirror but **not chosen** for this repo to keep a single canonical require line and match historical `github.com/charmbracelet/*` v1 layout.
+- Keep Lipgloss v1 with Bubbletea v2 — **rejected**: mixed major versions increase friction and duplicate color/terminal stacks.
 
 ---
 
@@ -45,40 +48,43 @@ Follow the upstream **`UPGRADE_GUIDE_V2.md`** (key changes: `View() tea.View` in
 
 ---
 
-## 4. Mathematical model: “liquid blob ring”
+## 4. Mathematical model: “liquid blob ring” (name ≠ geometry)
 
-**Decision**: Use a **closed-loop (periodic) implicit field on an annulus** in polar coordinates, discretized to the terminal grid.
+**Naming**: **“Liquid blob ring”** evokes looping, organic motion; it does **not** prescribe a **circular band**, **torus**, or **polar annulus** in the terminal. The visible silhouette must **not** be locked to a geometric circle/ring mask.
+
+**Decision**: Use a **2D implicit scalar field** on a **rectangular spinner viewport** (terminal cells), in **Cartesian normalized coordinates** \((s_x, s_y) \in [0,1]^2\), discretized per cell.
 
 ### 4.1 Geometry
 
-- Center \((c_x, c_y)\) from layout box; each cell \((x,y)\) maps to polar \((r, \theta)\) with \(\theta \in [0, 2\pi)\).
-- **Annulus mask**: ring only where \(r_{\mathrm{in}} \le r \le r_{\mathrm{out}}\); outside mask the cell is blank (space).
+- Spinner occupies a **width × height** cell rectangle (from layout). Each cell maps to a sample point \((s_x, s_y)\) at cell center, normalized to the viewport.
+- **No annulus / no polar ring mask**: do **not** restrict the field to \(r_{\mathrm{in}} \le r \le r_{\mathrm{out}}\) in polar coordinates. Optional **soft edge falloff** near the rectangle border (vignette) is allowed to keep the blob visually contained — this is **not** a circular ring.
 
 ### 4.2 Field (pure Go)
 
-Define a **metaball-style** sum of wrapped Gaussians on the circle plus a **traveling wave** and a **global pulse** (brightness breathing):
+Define a **metaball-style** sum of 2D Gaussians plus a **planar traveling wave** and a **global pulse**:
 
 \[
-\Phi(\theta, t) = P(t) \cdot \left( B(\theta, t) + W \cdot \sin(k\theta - \omega t) \right)
+\Phi(s_x, s_y, t) = P(t) \cdot \left( B(s_x, s_y, t) + W \cdot \sin(\vec{k}\cdot(s_x, s_y) - \omega t) \right)
 \]
 
-- **Blobs**: \(B(\theta, t) = \sum_{i=1}^{n} \exp\left(-\frac{\mathrm{wrap}(\theta - \theta_i(t))^2}{2\sigma^2}\right)\)  
-  with \(\theta_i(t) = (\theta_{0,i} + \omega_i t) \bmod 2\pi\) and `wrap` the shortest angular distance on the circle.
-- **Wave** (spec “wave”): traveling sinusoid around the ring with integer \(k\) lobes.
+- **Blobs**: \(B(s_x, s_y, t) = \sum_{i=1}^{n} \exp\left(-\frac{\|(s_x, s_y) - \mathbf{c}_i(t)\|^2}{2\sigma^2}\right)\)  
+  with \(\mathbf{c}_i(t)\) moving inside \([0,1]^2\) (or wrapping at edges if desired for seamless flow). Initial positions and motion parameters are **seed-derived** for determinism.
+- **Wave** (spec “wave”): traveling sinusoid in the **plane** (choose \(\vec{k}\) for direction; integer-related \(k_x, k_y\) give sequential lobe motion across the grid).
 - **Pulse** (spec “pulse”): \(P(t) = 0.5 + 0.5\sin(\Omega t)\) (or smoothstep variant) scales overall intensity.
 
-**Rationale**: Metaballs on a circle produce **organic merging “liquid”** silhouettes; the wave term adds sequential motion; the pulse adds periodic brightness change. All operations are standard float64 math, deterministic given \((t, \text{seed})\).
+**Rationale**: 2D metaballs yield **liquid-like merging blobs** without imposing a circular topology; planar wave + pulse match FR-002–FR-004. Deterministic given \((t, \text{seed})\).
 
 **Alternatives considered**:
 
+- Annulus / polar “ring” field — **rejected**: conflicts with product intent (no geometric circular band).
 - Precomputed ASCII art frames — rejected: heavy assets, no smooth evolution.
 - 3D particle simulation — rejected: overkill for terminal resolution.
-- Simple rotating spinner only — rejected: does not meet “liquid blob ring” visual goal.
+- Simple rotating spinner only — rejected: does not meet the liquid visual goal.
 
 ### 4.3 Discretization → glyphs and color
 
 - Quantize \(\Phi\) into **luminance bands** mapped to a small rune ramp (e.g. ` ·░▒▓█` or Braille blocks for smoother look).
-- **Gradient color**: map \((\theta, t)\) to hue on an HSV wheel, then to Lipgloss colors; saturation/value modulated by \(\Phi\) and \(P(t)\).
+- **Gradient color**: map \((s_x, s_y, t)\) and/or \(\Phi\) to hue (HSV), then to Lipgloss colors; saturation/value modulated by \(\Phi\) and \(P(t)\).
 - **No-color mode** (spec edge case): same luminance ramp, no ANSI color codes.
 
 ---
@@ -87,7 +93,7 @@ Define a **metaball-style** sum of wrapped Gaussians on the circle plus a **trav
 
 **Decision**: Split into:
 
-1. **`internal/anim/blobring` (name TBD in implementation)**: deterministic `Step(tick, seed) -> Frame` where `Frame` is **semantic cells** (rune + optional FG/BG indices or RGB structs) — **no** Bubbletea, **no** Lipgloss.
+1. **`internal/anim`** (e.g. `liquidblob.go`): deterministic `ComputeFrame` / tick step where `Frame` is **semantic cells** (rune + optional FG/BG indices or RGB structs) — **no** Bubbletea, **no** Lipgloss.
 2. **`internal/tui/spinner_view.go` (or similar)**: `Frame` → string via Lipgloss v2, controlled by `RenderOptions` (`DisableANSI`, `DisableColor`, dimensions).
 3. **Bubbletea v2 model**: holds tick counter, calls into (2) in `View()`, schedules `tea.Tick` (or frame msg) while waiting; on review ready, switches to existing review UI.
 
@@ -101,7 +107,7 @@ Define a **metaball-style** sum of wrapped Gaussians on the circle plus a **trav
 
 **Decision**:
 
-- **`Seed`**: derive all \(\theta_{0,i}\), \(\omega_i\) (within safe ranges) from a **PRNG** (`math/rand/v2` with explicit source) seeded for tests; production uses time-based seed or fixed aesthetic seed.
+- **`Seed`**: derive blob initial positions, motion parameters, and \(\vec{k}\) components (within safe ranges) from a **PRNG** (`math/rand/v2` with explicit source) seeded for tests; production uses time-based seed or fixed aesthetic seed.
 - **`DisableANSI` / plain output**: route Lipgloss through a **no-color / no-escape** renderer profile (Lipgloss v2 + `termenv`/output configured for no ANSI) so golden files are **plain text**; optional separate goldens with ANSI on for manual inspection only.
 
 **Rationale**: Matches user ask for snapshot regression and stable automation; avoids framing as “CI product” while still supporting headless `go test`.
@@ -116,7 +122,7 @@ Define a **metaball-style** sum of wrapped Gaussians on the circle plus a **trav
 |-------|------------|
 | Exact v2 import path | Use `go get charm.land/bubbletea/v2@latest` and matching Lipgloss v2; lock versions in `go.mod`. |
 | teatest compatibility | Validate during migration; goldens do not depend on it. |
-| “Liquid blob” definition | Metaball sum on circle + traveling wave + global pulse, discretized to glyphs/colors. |
+| “Liquid blob ring” definition | **Not** a circular/torus band: 2D Cartesian metaball field in a rectangle + planar traveling wave + global pulse, discretized to glyphs/colors. |
 | Frame snapshot location | Test `Frame` → string pipeline, not Bubbletea `View` string alone (unless ANSI off makes it stable). |
 
 ---

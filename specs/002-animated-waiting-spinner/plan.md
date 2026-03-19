@@ -1,25 +1,25 @@
 # Implementation Plan: Animated Waiting Spinner + Bubbletea/Lipgloss v2
 
 **Branch**: `002-animated-waiting-spinner` | **Date**: 2026-03-19 | **Spec**: [spec.md](./spec.md)  
-**Input**: Feature specification from `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/spec.md` plus planning directive: migrate Bubbletea/Lipgloss to v2+, implement liquid blob ring animation with pure Go math, extract rendering for golden frame tests (deterministic seed, ANSI-off option).
+**Input**: Feature specification from `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/spec.md` plus planning directive: migrate Bubbletea/Lipgloss to v2+, implement **liquid blob / “liquid blob ring”** waiting animation (별칭 “liquid blob ring” is **not** a geometric circular band; see [research.md](./research.md)) with pure Go math, extract rendering for golden frame tests (deterministic seed, ANSI-off option).
 
 ---
 
 ## Summary
 
-preflight will **upgrade** terminal stack to **Bubbletea v2** and **Lipgloss v2**, then show a **deterministic, testable** “liquid blob ring” spinner while the AI provider runs. The **mathematical core** (metaball-style field on an annulus + traveling wave + global pulse — see [research.md](./research.md)) lives in a **stdlib-only internal package**; **Lipgloss** applies color/glyphs; **Bubbletea** only drives ticks and lifecycle. **Regression tests** compare **plain-text** frame snapshots (`DisableANSI`) so `go test` needs no real terminal. **`--no-tui` / non-TTY** paths remain plain progress text per spec FR-006.
+preflight will **upgrade** terminal stack to **Bubbletea v2** (`charm.land/bubbletea/v2`) and **Lipgloss v2** (`github.com/charmbracelet/lipgloss/v2`), then show a **deterministic, testable** liquid-blob spinner while the AI provider runs. The **mathematical core** is a **2D Cartesian metaball-style field** in a rectangular viewport plus **planar traveling wave** and **global pulse** ([research.md](./research.md)) — **no annulus / no circular ring mask**. It lives in a **stdlib-only internal package**; **Lipgloss** applies color/glyphs; **Bubbletea** only drives ticks and lifecycle. **Regression tests** compare **plain-text** frame snapshots (`DisableANSI`) so `go test` needs no real terminal. **`--no-tui` / non-TTY** paths remain plain progress text per spec FR-006.
 
 ---
 
 ## Technical Context
 
 **Language/Version**: Go 1.26.x (matches repo `go.mod`)  
-**Primary Dependencies**: `charm.land/bubbletea/v2`, Lipgloss v2 (`github.com/charmbracelet/lipgloss/v2` or `charm.land/lipgloss/v2` — lock one in `go.mod`); existing cobra, go-isatty, testify, yaml.v3  
+**Primary Dependencies**: `charm.land/bubbletea/v2`, Lipgloss v2 **`github.com/charmbracelet/lipgloss/v2`** (locked in [research.md](./research.md) §2; record same path in `go.mod` and [CLAUDE.md](../../CLAUDE.md) via tasks); existing cobra, go-isatty, testify, yaml.v3  
 **Storage**: N/A  
 **Testing**: `go test ./...` + golden files under `internal/anim/testdata/` or adjacent package; race via `make test`  
 **Target Platform**: Linux + macOS (same as project)  
 **Project Type**: CLI / git hook TUI  
-**Performance Goals**: Spinner tick 10–30 FPS feel; negligible CPU vs AI subprocess; frame compute for typical width×height < 1ms where practical  
+**Performance Goals** *(engineering guidance — **not** spec-gated unless promoted to [spec.md](./spec.md))*: Spinner tick 10–30 FPS feel; negligible CPU vs AI subprocess; frame compute for typical width×height < 1ms where practical. Use for implementation tuning only; no dedicated task unless NFR is added to the spec.  
 **Constraints**: No new “util/helpers” packages; spinner failure must not affect push exit code (FR-008); deterministic output for fixed `(seed, tick, size)` when ANSI disabled  
 **Scale/Scope**: Single spinner region + transition to existing review UI; hook orchestration may need async provider invocation under Bubbletea
 
@@ -34,7 +34,7 @@ preflight will **upgrade** terminal stack to **Bubbletea v2** and **Lipgloss v2*
 | I. Go Standards Compliance | ✅ PASS | New exported APIs need doc comments; errors wrapped per project rules. |
 | II. Zero-Lint Policy | ✅ PASS | `make lint` after each change. |
 | III. Explicit Error Handling | ✅ PASS | Spinner/render errors must not panic; must not change review exit semantics (warn or degrade visually). |
-| IV. CLI Interface Design | ✅ PASS | `--no-tui` / non-TTY unchanged: plain output, no animation ANSI. |
+| IV. CLI Interface Design | ✅ PASS | `--no-tui` / non-TTY unchanged: plain output, no animation ANSI. **Regression** (post-hook/async): AI CLI missing/timeout → exit `0` + stderr warning ([tasks.md](./tasks.md) T025). |
 | V. Simplicity & Minimal Dependencies | ✅ PASS | v2 upgrades replace v1 lines (not additive); new internal package is single-purpose animation math, not `util`. |
 
 **No violations.** Complexity Tracking not required.
@@ -67,14 +67,14 @@ Design artifacts ([research.md](./research.md), [data-model.md](./data-model.md)
 /home/gyeonghokim/workspace/preflight/
 ├── go.mod                          # bubbletea v2 + lipgloss v2; teatest revision TBD
 ├── internal/
-│   ├── anim/                       # NEW: blob ring field, Frame grid, deterministic seed
-│   │   ├── blobring.go
-│   │   ├── blobring_test.go
+│   ├── anim/                       # NEW: 2D liquid-blob field, Frame grid, deterministic seed
+│   │   ├── liquidblob.go
+│   │   ├── liquidblob_test.go
 │   │   └── testdata/               # golden frame *.txt (optional placement per contract)
 │   ├── tui/
 │   │   ├── model.go                # MIGRATE: Bubbletea v2, optional WaitingModel compose
 │   │   ├── styles.go               # MIGRATE: Lipgloss v2
-│   │   ├── plain.go                # unchanged behavior; verify imports
+│   │   ├── plain.go                # review plain-text render only; stderr wait/progress orchestration lives in hook.go (T019)
 │   │   ├── spinner_view.go         # NEW: Frame -> string (RenderOptions: DisableANSI)
 │   │   └── model_test.go           # MIGRATE: teatest or slimmer tests
 │   └── hook/
@@ -97,7 +97,7 @@ Design artifacts ([research.md](./research.md), [data-model.md](./data-model.md)
 
 **Outputs**:
 
-- [data-model.md](./data-model.md) — `RenderOptions`, `BlobRingConfig`, `Frame`, `WaitingPhase`, `WaitingModel`.
+- [data-model.md](./data-model.md) — `RenderOptions`, `LiquidBlobConfig`, `Frame`, `WaitingPhase`, `WaitingModel`.
 - [contracts/spinner-render.md](./contracts/spinner-render.md) — determinism + golden file rules.
 - [quickstart.md](./quickstart.md) — dev workflow for this branch.
 
@@ -105,17 +105,11 @@ Design artifacts ([research.md](./research.md), [data-model.md](./data-model.md)
 
 ---
 
-### Phase 2 — Task breakdown (deferred)
+### Phase 2 — Task breakdown ✅
 
-**Not created by this command.** Use **speckit.tasks** / `tasks.md` to expand into concrete PR-sized tasks (migration PR vs spinner PR vs hook async PR as appropriate).
+**Output**: [tasks.md](./tasks.md) — dependency-ordered implementation tasks (T001–T025), mapped to user stories US1–US3 plus polish.
 
-Suggested task groups for Phase 2 authoring:
-
-1. **T2-migrate**: go.mod + compile fix all `tea.*` / `View` / messages + Lipgloss API drift.
-2. **T2-anim**: `internal/anim` + unit tests + goldens (`DisableANSI`).
-3. **T2-tui**: `RenderFrame` + Bubbletea v2 tick loop for waiting state.
-4. **T2-hook**: Provider as `tea.Cmd` (or goroutine + custom `Msg`) so UI updates during wait; preserve fail-open and exit codes.
-5. **T2-plain**: Ensure FR-006/FR-008 acceptance remains covered in tests.
+**Themes covered**: go.mod v2 migration; `internal/anim` (2D liquid-blob field, **not** annulus) + goldens; `spinner_view` + `waiting.go`; async hook + **stderr** plain progress (헌장 IV); Ctrl+C cleanup; quality gates.
 
 ---
 
