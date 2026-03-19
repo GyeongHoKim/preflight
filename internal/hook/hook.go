@@ -3,6 +3,7 @@ package hook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -19,7 +20,7 @@ import (
 )
 
 // defaultProviders is the auto-detection order.
-var defaultProviders = []string{"claude", "codex", "gemini", "qwen"}
+var defaultProviders = []string{"claude", "codex"}
 
 // Run orchestrates a preflight review run and returns the process exit code.
 //
@@ -86,31 +87,31 @@ func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stder
 		}
 	}
 
-	// Run provider.
-	start := time.Now()
-	runCtx, runCancel := context.WithTimeout(ctx, cfg.Timeout)
-	defer runCancel()
-
-	result, runErr := providerRunner.Run(runCtx, diffBytes)
-	result.Duration = time.Since(start).Milliseconds()
-
-	if runErr != nil {
-		if provider.ShouldFailOpen(runErr) {
-			logf(stderr, "preflight: provider unavailable (%v); skipping review\n", runErr)
-			return 0
-		}
-		logf(stderr, "preflight: provider error: %v\n", runErr)
-		return 1
-	}
-
-	// Parse review.
+	// Determine provider name.
 	provName := cfg.Provider
 	if provName == "auto" {
 		provName = "unknown"
 	}
-	rev, parseErr := review.ParseReview(provName, result)
-	if parseErr != nil {
-		logf(stderr, "preflight: parse review error: %v\n", parseErr)
+
+	// Run provider with retry on malformed response.
+	runCtx, runCancel := context.WithTimeout(ctx, cfg.Timeout)
+	defer runCancel()
+
+	rev, err := attempt(runCtx, providerRunner, diffBytes, provName)
+	if errors.Is(err, review.ErrMalformedResponse) {
+		logf(stderr, "preflight: malformed response; retrying once\n")
+		rev, err = attempt(runCtx, providerRunner, diffBytes, provName)
+	}
+	if err != nil {
+		if provider.ShouldFailOpen(err) {
+			logf(stderr, "preflight: provider unavailable (%v); skipping review\n", err)
+			return 0
+		}
+		if errors.Is(err, review.ErrMalformedResponse) {
+			logf(stderr, "preflight: could not parse review after retry; skipping\n")
+			return 0
+		}
+		logf(stderr, "preflight: provider error: %v\n", err)
 		return 1
 	}
 	if rev == nil {
@@ -178,15 +179,22 @@ func buildRunner(cfg *config.Config) (provider.Runner, error) {
 	switch provName {
 	case "claude":
 		return provider.NewClaudeRunner(prompt, schema), nil
-	case "gemini":
-		return provider.NewGeminiRunner(prompt), nil
 	case "codex":
-		return provider.NewCodexRunner(prompt), nil
-	case "qwen":
-		return provider.NewQwenRunner(prompt), nil
+		return provider.NewCodexRunner(prompt, schema), nil
 	default:
 		return nil, fmt.Errorf("unknown provider %q", provName)
 	}
+}
+
+// attempt runs the provider once and parses the result.
+func attempt(ctx context.Context, runner provider.Runner, diffBytes []byte, provName string) (*review.Review, error) {
+	start := time.Now()
+	result, err := runner.Run(ctx, diffBytes)
+	result.Duration = time.Since(start).Milliseconds()
+	if err != nil {
+		return nil, err
+	}
+	return review.ParseReview(provName, result)
 }
 
 // branchName extracts the short branch name from a full ref like refs/heads/main.

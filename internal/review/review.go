@@ -8,6 +8,12 @@ const (
 	SeverityInfo     = "info"
 )
 
+// Verdict constants for AI correctness assessment.
+const (
+	VerdictCorrect   = "patch is correct"
+	VerdictIncorrect = "patch is incorrect"
+)
+
 // Finding is a single issue identified in the diff by an AI provider.
 type Finding struct {
 	Severity string `json:"severity"`
@@ -21,6 +27,8 @@ type Review struct {
 	Findings   []Finding
 	Blocking   bool
 	Summary    string
+	Verdict    string  // VerdictCorrect or VerdictIncorrect
+	Confidence float64 // [0.0, 1.0]
 	Provider   string
 	DurationMS int64
 }

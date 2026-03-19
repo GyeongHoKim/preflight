@@ -7,7 +7,7 @@
 
 ## Summary
 
-preflight is a Go CLI tool that installs as a git pre-push hook. On every `git push`, it collects the diff between the local branch and its upstream, invokes a locally installed AI CLI (claude, codex, gemini, or qwen) as a subprocess to perform a code review, and renders the findings in a Bubbletea TUI. If the AI identifies a critical issue, the push is blocked; the developer can override the block or cancel. When the AI CLI is unavailable or times out, preflight exits 0 (fail-open) so it never silently blocks a push. Distributed as a single statically-linked binary via goreleaser and Homebrew.
+preflight is a Go CLI tool that installs as a git pre-push hook. On every `git push`, it collects the diff between the local branch and its upstream, invokes a locally installed AI CLI (claude or codex) as a subprocess to perform a code review, and renders the findings in a Bubbletea TUI. If the AI identifies a critical issue, the push is blocked; the developer can override the block or cancel. When the AI CLI is unavailable or times out, preflight exits 0 (fail-open) so it never silently blocks a push. Distributed as a single statically-linked binary via goreleaser and Homebrew.
 
 ---
 
@@ -84,8 +84,6 @@ internal/
 │   ├── runner.go                 # Runner interface; Detect() auto-detection; RealRunner
 │   ├── claude.go                 # claude: -p --output-format json --json-schema
 │   ├── codex.go                  # codex: -q --json
-│   ├── gemini.go                 # gemini: --prompt --output-format json
-│   ├── qwen.go                   # qwen: -p --output-format json (same pattern as claude)
 │   └── runner_test.go            # Table-driven tests with MockRunner
 │
 ├── review/                       # Review result types and JSON parsing
@@ -141,7 +139,7 @@ go.sum
 
 **Deliverables**:
 - `Runner` interface with `Run(ctx context.Context, diff []byte) (ProviderResult, error)`
-- `claude.go`, `gemini.go`, `codex.go`, `qwen.go` each implement `Runner`
+- `claude.go`, `codex.go` each implement `Runner`
 - `provider.Detect()` tries providers in order via `exec.LookPath`
 - `review.ParseReview()` extracts canonical JSON from each provider's response envelope
 - Fail-open conditions all return `nil, nil` with a warning written to provided `io.Writer`

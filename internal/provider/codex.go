@@ -15,11 +15,12 @@ const codexLargeDiffThreshold = 100 * 1024 // 100 KB
 // CodexRunner invokes the codex CLI to perform a code review.
 type CodexRunner struct {
 	prompt string
+	schema string // JSON schema content; written to temp file per invocation
 }
 
-// NewCodexRunner creates a CodexRunner with the given prompt.
-func NewCodexRunner(prompt string) *CodexRunner {
-	return &CodexRunner{prompt: prompt}
+// NewCodexRunner creates a CodexRunner with the given prompt and schema.
+func NewCodexRunner(prompt, schema string) *CodexRunner {
+	return &CodexRunner{prompt: prompt, schema: schema}
 }
 
 // Run implements Runner for the codex CLI.
@@ -49,7 +50,28 @@ func (r *CodexRunner) Run(ctx context.Context, diff []byte) (review.ProviderResu
 		fullPrompt = r.prompt + "\n\n" + string(diff)
 	}
 
-	cmd := exec.CommandContext(ctx, path, "exec", "--sandbox", "read-only", "--json", "--ephemeral", fullPrompt)
+	// Write schema to temp file (codex requires --output-schema <FILE>, not inline JSON).
+	sf, err := os.CreateTemp("", "preflight-schema-*.json")
+	if err != nil {
+		return review.ProviderResult{}, fmt.Errorf("codex: create schema temp file: %w", err)
+	}
+	defer os.Remove(sf.Name()) //nolint:errcheck // best-effort cleanup of temp file
+	if _, err := sf.Write([]byte(r.schema)); err != nil {
+		_ = sf.Close()
+		return review.ProviderResult{}, fmt.Errorf("codex: write schema temp file: %w", err)
+	}
+	if err := sf.Close(); err != nil {
+		return review.ProviderResult{}, fmt.Errorf("codex: close schema temp file: %w", err)
+	}
+
+	cmd := exec.CommandContext(ctx, path,
+		"exec",
+		"--sandbox", "read-only",
+		"--json",
+		"--ephemeral",
+		"--output-schema", sf.Name(),
+		fullPrompt,
+	)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

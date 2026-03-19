@@ -20,13 +20,13 @@ go test -run TestFunctionName ./path/to/package/
 
 ## Architecture
 
-preflight is a Git pre-push hook that pipes the staged diff to a locally installed AI CLI (claude, codex, gemini, or qwen) as a subprocess and renders the structured JSON response in a TUI.
+preflight is a Git pre-push hook that pipes the staged diff to a locally installed AI CLI (claude or codex) as a subprocess and renders the structured JSON response in a TUI.
 
 Key design points:
 - **No API calls**: preflight invokes AI CLIs as subprocesses using the user's existing authenticated local session. It never makes direct API requests.
 - **stdout / stderr / exit code contract**: stdout = TUI or plain-text results; stderr = errors and warnings; exit 0 = clean, exit 1 = blocking issues or internal error, exit 2 = usage error.
 - **Fail-open on tool unavailability**: if the AI CLI is not found or times out, preflight MUST exit 0 and emit a warning to stderr — it must never silently block a push due to a tool failure.
-- **Provider auto-detection**: tried in order `claude → codex → gemini → qwen`; overridable via `--provider` or config file.
+- **Provider auto-detection**: tried in order `claude → codex`; overridable via `--provider` or config file.
 - **Config resolution**: project-level `.preflight.yml` overrides global `~/.config/preflight/.preflight.yml`.
 
 ## Non-Negotiable Rules (from `.specify/memory/constitution.md`)
@@ -47,6 +47,7 @@ Key design points:
 
 ## Active Technologies
 - Go (latest stable, ≥1.22) + cobra, bubbletea, lipgloss, go-isatty, testify, yaml.v3 (001-preflight-ai-review)
+- Providers: claude, codex (subprocess, no API keys)
 - N/A (no persistent state; config read from YAML files, hook written to `.git/hooks/pre-push`) (001-preflight-ai-review)
 
 ## Recent Changes
