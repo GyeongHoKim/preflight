@@ -1,27 +1,30 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (none) → 1.0.0 (initial adoption)
+Version change: 1.0.0 → 1.1.0
 
 Modified principles:
-  - All principles are new (no prior version)
+  - IV. CLI Interface Design (scope clarified from AI CLI-only wording to
+    provider-agnostic availability/fail-open wording)
+  - Technology Stack provider policy updated to allow trusted-boundary HTTP
+    providers (e.g., organization-controlled Ollama) alongside subprocess CLIs.
 
 Added sections:
-  - Core Principles (5 principles)
-  - Technology Stack
-  - Quality Gates
-  - Governance
+  - None.
 
 Removed sections:
-  - N/A
+  - None.
 
 Templates requiring updates:
   - .specify/templates/plan-template.md  ✅ — Constitution Check section already present;
-    gate language aligns with principles defined here. No structural changes needed.
+    gate language continues to work; no structural changes needed.
   - .specify/templates/spec-template.md  ✅ — Requirements + Success Criteria sections
     are compatible with Go CLI project structure. No changes needed.
   - .specify/templates/tasks-template.md ✅ — Phase 1 includes linting/formatting task
     slot (T003); path conventions support single-project Go layout. No changes needed.
+  - .specify/templates/commands/*.md ⚠ pending — directory does not exist in this
+    repository; no command templates to synchronize.
+  - README.md ✅ — no constitution-reference text requiring edits for this amendment.
 
 Follow-up TODOs:
   - None. All placeholders resolved.
@@ -95,8 +98,8 @@ The CLI MUST follow these I/O conventions:
 - `--no-tui` flag MUST produce machine-parseable plain text output suitable for
   users who prefer not to use the TUI, for piping or saving output locally, and
   for terminals with limited or unreliable color and rich-text support.
-- The tool MUST exit `0` (never block silently) when the AI CLI is unavailable or
-  times out — a warning MUST be emitted to stderr.
+- The tool MUST exit `0` (never block silently) when the configured AI provider
+  is unavailable or times out — a warning MUST be emitted to stderr.
 
 **Rationale**: preflight runs as a git hook and must behave predictably on the
 developer machine. Predictable I/O contracts let users integrate it reliably into
@@ -124,8 +127,15 @@ and lowers the maintenance burden.
 - **Testing**: `go test ./...` with table-driven tests preferred
 - **Distribution**: Single statically-linked binary; released via GitHub Releases,
   Homebrew tap (`GyeongHoKim/tap/preflight`), and `go install`
-- **Supported AI providers**: `claude`, `codex`, `gemini`, `qwen` (invoked as
-  subprocess; no direct API usage by preflight itself)
+- **Supported AI providers**:
+  - Subprocess CLIs: `claude`, `codex`, `gemini`, `qwen`
+  - Trusted-boundary HTTP providers (when explicitly configured): e.g.,
+    organization-controlled `ollama`
+- **Inference transport policy**:
+  - preflight MUST NOT require third-party cloud API usage for core local review
+    workflows.
+  - Direct HTTP inference calls are permitted only for user-configured local or
+    organization-controlled endpoints within the declared trust boundary.
 - **Configuration**: `.preflight.yml` (project-level) or
   `~/.config/preflight/.preflight.yml` (global)
 
@@ -169,4 +179,4 @@ test or build status.
 `.specify/memory/` and any `CLAUDE.md` or agent context files present in the
 repository root.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 1.1.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-20
