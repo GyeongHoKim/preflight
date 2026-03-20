@@ -5,8 +5,10 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/GyeongHoKim/preflight/internal/config"
 	"github.com/GyeongHoKim/preflight/internal/diff"
@@ -97,6 +99,27 @@ func TestRun_MalformedResponse_RetrySucceeds(t *testing.T) {
 	assert.Equal(t, 0, code)
 	assert.Equal(t, 2, mock.CallCount)
 	assert.Contains(t, errOut.String(), "retrying once")
+}
+
+// slowRunner delays completion so plain-mode stderr progress has time to run.
+type slowRunner struct{}
+
+func (slowRunner) Run(ctx context.Context, _ []byte) (review.ProviderResult, error) {
+	select {
+	case <-time.After(150 * time.Millisecond):
+	case <-ctx.Done():
+		return review.ProviderResult{}, ctx.Err()
+	}
+	return reviewtest.CleanReview("claude"), nil
+}
+
+func TestRun_PlainPath_NoEscOnStdoutOrStderr(t *testing.T) {
+	var out, errOut bytes.Buffer
+	stdin := strings.NewReader(makePushInfo("abc123", "0000000000000000000000000000000000000000"))
+	code := Run(context.Background(), defaultCfg(), stdin, &out, &errOut, true, someDiff(), slowRunner{})
+	require.Equal(t, 0, code)
+	assert.NotContains(t, out.String(), "\x1b")
+	assert.NotContains(t, errOut.String(), "\x1b")
 }
 
 func TestRun_MalformedResponse_RetryAlsoFails_FailOpen(t *testing.T) {

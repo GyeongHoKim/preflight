@@ -8,9 +8,10 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/GyeongHoKim/preflight/internal/config"
 	"github.com/GyeongHoKim/preflight/internal/diff"
@@ -93,37 +94,34 @@ func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stder
 		provName = "unknown"
 	}
 
-	// Run provider with retry on malformed response.
 	runCtx, runCancel := context.WithTimeout(ctx, cfg.Timeout)
 	defer runCancel()
 
-	rev, err := attempt(runCtx, providerRunner, diffBytes, provName)
-	if errors.Is(err, review.ErrMalformedResponse) {
-		logf(stderr, "preflight: malformed response; retrying once\n")
-		rev, err = attempt(runCtx, providerRunner, diffBytes, provName)
-	}
-	if err != nil {
-		if provider.ShouldFailOpen(err) {
-			logf(stderr, "preflight: provider unavailable (%v); skipping review\n", err)
-			return 0
-		}
-		if errors.Is(err, review.ErrMalformedResponse) {
-			logf(stderr, "preflight: could not parse review after retry; skipping\n")
-			return 0
-		}
-		logf(stderr, "preflight: provider error: %v\n", err)
-		return 1
-	}
-	if rev == nil {
-		logf(stderr, "preflight: could not parse review; skipping\n")
-		return 0
-	}
-
-	// Render.
 	branch := branchName(pi.LocalRef)
 	commitCount := 1 // approximate; exact count not critical here
 
 	if noTUI || !tui.IsTTY() {
+		stopPlain := startPlainProgress(stderr)
+		rev, rerr := runReviewWithRetry(runCtx, stderr, providerRunner, diffBytes, provName)
+		stopPlain()
+
+		if rerr != nil {
+			if provider.ShouldFailOpen(rerr) {
+				logf(stderr, "preflight: provider unavailable (%v); skipping review\n", rerr)
+				return 0
+			}
+			if errors.Is(rerr, review.ErrMalformedResponse) {
+				logf(stderr, "preflight: could not parse review after retry; skipping\n")
+				return 0
+			}
+			logf(stderr, "preflight: provider error: %v\n", rerr)
+			return 1
+		}
+		if rev == nil {
+			logf(stderr, "preflight: could not parse review; skipping\n")
+			return 0
+		}
+
 		tui.PlainRender(stdout, rev, branch, commitCount)
 		if rev.Blocking {
 			return 1
@@ -131,17 +129,53 @@ func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stder
 		return 0
 	}
 
-	// TUI mode.
-	model := tui.NewReviewModel(rev)
-	p := tea.NewProgram(model, tea.WithOutput(stdout))
+	// TUI mode: spinner while provider runs, then review.
+	fetch := func() (*review.Review, error) {
+		return runReviewWithRetry(runCtx, stderr, providerRunner, diffBytes, provName)
+	}
+	wm := tui.NewWaitingModel(stderr, fetch)
+	p := tea.NewProgram(wm, tea.WithOutput(stdout))
 	finalModel, teaErr := p.Run()
+	if errors.Is(teaErr, tea.ErrInterrupted) {
+		return 1
+	}
 	if teaErr != nil {
 		logf(stderr, "preflight: tui error: %v\n", teaErr)
 		return 1
 	}
 
-	rm, ok := finalModel.(tui.ReviewModel)
+	wfinal, ok := finalModel.(*tui.WaitingModel)
 	if !ok {
+		return 1
+	}
+	if wfinal.UserInterrupted() {
+		return 1
+	}
+	if wfinal.QuitEarly() {
+		rev, rerr := wfinal.ProviderResult()
+		if rerr != nil {
+			if provider.ShouldFailOpen(rerr) {
+				logf(stderr, "preflight: provider unavailable (%v); skipping review\n", rerr)
+				return 0
+			}
+			if errors.Is(rerr, review.ErrMalformedResponse) {
+				logf(stderr, "preflight: could not parse review after retry; skipping\n")
+				return 0
+			}
+			logf(stderr, "preflight: provider error: %v\n", rerr)
+			return 1
+		}
+		if rev == nil {
+			logf(stderr, "preflight: could not parse review; skipping\n")
+			return 0
+		}
+		// Unreachable if fetch succeeded with a review — QuitEarly should be false.
+		return 0
+	}
+
+	rm := wfinal.FinalReviewModel()
+	rev := rm.Review()
+	if rev == nil {
 		return 1
 	}
 
@@ -153,6 +187,41 @@ func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stder
 		return 1
 	}
 	return 0
+}
+
+func startPlainProgress(stderr io.Writer) func() {
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				// Carriage return only — no ESC/SGR (US2 / SC-004 stderr hygiene).
+				_, _ = fmt.Fprintf(stderr, "\rpreflight: analyzing changes...")
+			}
+		}
+	}()
+	return func() {
+		close(done)
+		wg.Wait()
+		_, _ = fmt.Fprintln(stderr)
+	}
+}
+
+// runReviewWithRetry mirrors the previous synchronous hook behavior (malformed retry).
+func runReviewWithRetry(ctx context.Context, stderr io.Writer, runner provider.Runner, diffBytes []byte, provName string) (*review.Review, error) {
+	rev, err := attempt(ctx, runner, diffBytes, provName)
+	if errors.Is(err, review.ErrMalformedResponse) {
+		logf(stderr, "preflight: malformed response; retrying once\n")
+		rev, err = attempt(ctx, runner, diffBytes, provName)
+	}
+	return rev, err
 }
 
 // logf writes a formatted message to w.
