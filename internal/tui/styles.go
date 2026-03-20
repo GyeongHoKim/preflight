@@ -1,7 +1,7 @@
 // Package tui provides terminal UI components for preflight.
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import lipgloss "charm.land/lipgloss/v2"
 
 const maxWidth = 80
 
