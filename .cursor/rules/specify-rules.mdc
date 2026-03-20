@@ -6,9 +6,11 @@ alwaysApply: true
 
 # preflight Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-19
+Auto-generated from all feature plans. Last updated: 2026-03-20
 
 ## Active Technologies
+- Go 1.26.x (repo `go.mod`) + Existing (bubbletea, cobra, yaml, testify); **no new dependency in Phase 1 decision** — use `net/http` + `encoding/json` for Ollama (see `specs/003-private-ollama-review/research.md`); optional spike on `github.com/ollama/ollama/api` during implementation only if justified. (003-private-ollama-review)
+- N/A (no persistent datastore; ephemeral chat state in memory). (003-private-ollama-review)
 
 - Go 1.26.x (matches repo `go.mod`) + `charm.land/bubbletea/v2`, Lipgloss v2 `charm.land/lipgloss/v2` (002-animated-waiting-spinner — see `specs/002-animated-waiting-spinner/research.md` §2); existing cobra, go-isatty, testify, yaml.v3
 
@@ -28,6 +30,7 @@ tests/
 Go 1.26.x (matches repo `go.mod`): Follow standard conventions
 
 ## Recent Changes
+- 003-private-ollama-review: Added Go 1.26.x (repo `go.mod`) + Existing (bubbletea, cobra, yaml, testify); **no new dependency in Phase 1 decision** — use `net/http` + `encoding/json` for Ollama (see `specs/003-private-ollama-review/research.md`); optional spike on `github.com/ollama/ollama/api` during implementation only if justified.
 
 - 002-animated-waiting-spinner: Added Go 1.26.x (matches repo `go.mod`) + `charm.land/bubbletea/v2`, Lipgloss v2 `charm.land/lipgloss/v2`; existing cobra, go-isatty, testify, yaml.v3
 
