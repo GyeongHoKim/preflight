@@ -24,13 +24,13 @@ Follow the upstream **`UPGRADE_GUIDE_V2.md`** (key changes: `View() tea.View` in
 
 ## 2. Lipgloss v2
 
-**Decision**: Target **Lipgloss v2** exclusively via **`github.com/charmbracelet/lipgloss/v2`** (`v2.0.x`). Use this import path in `go.mod`, `internal/tui`, tests, and agent docs (`CLAUDE.md`).
+**Decision**: Target **Lipgloss v2** via **`charm.land/lipgloss/v2`** (`v2.0.x`). The published module’s `go.mod` declares the `charm.land/lipgloss/v2` path (using `github.com/charmbracelet/lipgloss/v2` as a require fails module path validation). Use this import path in `go.mod`, `internal/tui`, tests, and agent docs (`CLAUDE.md`).
 
-**Rationale**: Pairs with Bubbletea v2 ecosystem; styling APIs remain `NewStyle()`, `Render()`, with layout helpers suitable for composing spinner + review layout. Locking one path removes “pick one” ambiguity in tasks and CI.
+**Rationale**: Pairs with Bubbletea v2 ecosystem; styling APIs remain `NewStyle()`, `Render()`, with layout helpers suitable for composing spinner + review layout.
 
 **Alternatives considered**:
 
-- `charm.land/lipgloss/v2` — acceptable mirror but **not chosen** for this repo to keep a single canonical require line and match historical `github.com/charmbracelet/*` v1 layout.
+- `github.com/charmbracelet/lipgloss/v2` — **rejected as a require path**: the v2 module’s canonical import path is `charm.land/lipgloss/v2` per `go get` / `go.mod` resolution.
 - Keep Lipgloss v1 with Bubbletea v2 — **rejected**: mixed major versions increase friction and duplicate color/terminal stacks.
 
 ---

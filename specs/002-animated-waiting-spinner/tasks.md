@@ -21,9 +21,9 @@
 
 **Purpose**: Baseline and design alignment before dependency migration
 
-- [ ] T001 Read `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/plan.md` and `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/spec.md` and confirm scope (v2 migration + spinner + plain path + fail-open)
-- [ ] T002 [P] Re-read `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/contracts/spinner-render.md` and `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/data-model.md` for entity names and golden rules
-- [ ] T003 [P] Run `make lint` and `make test` from `/home/gyeonghokim/workspace/preflight` on the feature branch; record baseline (must be green before migration)
+- [x] T001 Read `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/plan.md` and `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/spec.md` and confirm scope (v2 migration + spinner + plain path + fail-open)
+- [x] T002 [P] Re-read `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/contracts/spinner-render.md` and `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/data-model.md` for entity names and golden rules
+- [x] T003 [P] Run `make lint` and `make test` from `/home/gyeonghokim/workspace/preflight` on the feature branch; record baseline (must be green before migration)
 
 ---
 
@@ -33,12 +33,12 @@
 
 **⚠️ CRITICAL**: All US1–US3 implementation assumes v2 APIs (`tea.View`, `KeyPressMsg`, Lipgloss v2 module path locked in `go.mod`)
 
-- [ ] T004 Update `/home/gyeonghokim/workspace/preflight/go.mod` to require `charm.land/bubbletea/v2` and **`github.com/charmbracelet/lipgloss/v2`** (locked in [research.md](./research.md) §2 — do not split across mirror module paths); remove direct v1 `github.com/charmbracelet/bubbletea` and `github.com/charmbracelet/lipgloss` requires; run `go mod tidy` in `/home/gyeonghokim/workspace/preflight`
-- [ ] T005 Migrate `/home/gyeonghokim/workspace/preflight/internal/tui/model.go` to Bubbletea v2 (`View() tea.View`, `tea.NewView`, `tea.KeyPressMsg`, window size messages per v2 upgrade guide)
-- [ ] T006 [P] Migrate `/home/gyeonghokim/workspace/preflight/internal/tui/styles.go` to Lipgloss v2 import path and fix any API drift for review styles
-- [ ] T007 Update `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` for Bubbletea v2 program creation and stdout output (`tea.NewProgram`, v2-compatible options)
-- [ ] T008 Update `/home/gyeonghokim/workspace/preflight/internal/tui/model_test.go` for v2 messages; fix or replace `github.com/charmbracelet/x/exp/teatest` in `/home/gyeonghokim/workspace/preflight/go.mod` if incompatible with v2
-- [ ] T009 Run `make lint && make test` from `/home/gyeonghokim/workspace/preflight` and fix all compile/lint failures introduced by T004–T008
+- [x] T004 Update `/home/gyeonghokim/workspace/preflight/go.mod` to require `charm.land/bubbletea/v2` and **`github.com/charmbracelet/lipgloss/v2`** (locked in [research.md](./research.md) §2 — do not split across mirror module paths); remove direct v1 `github.com/charmbracelet/bubbletea` and `github.com/charmbracelet/lipgloss` requires; run `go mod tidy` in `/home/gyeonghokim/workspace/preflight`
+- [x] T005 Migrate `/home/gyeonghokim/workspace/preflight/internal/tui/model.go` to Bubbletea v2 (`View() tea.View`, `tea.NewView`, `tea.KeyPressMsg`, window size messages per v2 upgrade guide)
+- [x] T006 [P] Migrate `/home/gyeonghokim/workspace/preflight/internal/tui/styles.go` to Lipgloss v2 import path and fix any API drift for review styles
+- [x] T007 Update `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` for Bubbletea v2 program creation and stdout output (`tea.NewProgram`, v2-compatible options)
+- [x] T008 Update `/home/gyeonghokim/workspace/preflight/internal/tui/model_test.go` for v2 messages; fix or replace `github.com/charmbracelet/x/exp/teatest` in `/home/gyeonghokim/workspace/preflight/go.mod` if incompatible with v2
+- [x] T009 Run `make lint && make test` from `/home/gyeonghokim/workspace/preflight` and fix all compile/lint failures introduced by T004–T008
 
 **Checkpoint**: Repository builds cleanly on Bubbletea v2 + Lipgloss v2; review TUI and hook paths behave as before (minus intentional UI API changes)
 
@@ -50,15 +50,15 @@
 
 **Independent Test**: On a TTY, `git push` / `preflight run` shows animated spinner until provider returns, then review view without spinner ([spec.md](./spec.md) US1)
 
-- [ ] T010 [US1] Create `/home/gyeonghokim/workspace/preflight/internal/anim/liquidblob.go` exporting `LiquidBlobConfig`, `RenderOpts`, `Frame`, `ComputeFrame` per `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/data-model.md` and 2D Cartesian metaball + planar wave + pulse model in `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/research.md` — **no annulus / no polar ring mask** (stdlib only; no bubbletea/lipgloss imports)
-- [ ] T011 [P] [US1] Add `/home/gyeonghokim/workspace/preflight/internal/anim/liquidblob_test.go` asserting bitwise-stable `Frame` for identical `(config, width, height, tick, seed)`
-- [ ] T012 [US1] Add `/home/gyeonghokim/workspace/preflight/internal/tui/spinner_view.go` implementing `RenderFrame(frame anim.Frame, opts RenderOptions) string` with `DisableANSI` / `DisableColor` per `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/contracts/spinner-render.md` using Lipgloss v2 when ANSI allowed
-- [ ] T013 [P] [US1] Add golden text fixtures under `/home/gyeonghokim/workspace/preflight/internal/anim/testdata/spinner_golden/` and tests (e.g. in `/home/gyeonghokim/workspace/preflight/internal/tui/spinner_view_test.go`) that `RenderFrame` with `DisableANSI: true` matches files, contains no `0x1b` bytes, and enforces **[spec.md](./spec.md) SC-002** adjacent-tick rules per [contracts/spinner-render.md](./contracts/spinner-render.md) §Adjacent-frame smoothness (max differing cells per `(t,t+1)`; max fraction of identical adjacent pairs)
-- [ ] T014 [US1] Add `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go` with Bubbletea v2 model: tick-based updates, calls `ComputeFrame` + `RenderFrame`, transitions to existing review model/state when provider result arrives
-- [ ] T015 [US1] Refactor `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` so provider invocation runs concurrently with TUI (e.g. `tea.Cmd` wrapping provider `Run` or goroutine + custom `tea.Msg`) enabling spinner ticks during wait; preserve fail-open and exit code behavior for non-TUI branches until US2 tweaks
-- [ ] T016 [US1] Handle spec edge cases in `/home/gyeonghokim/workspace/preflight/internal/tui/spinner_view.go` and/or `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go`: very narrow terminal, no-color / low-capability terminal (glyph-only path), fast provider response avoids jarring flash ([spec.md](./spec.md) Edge Cases)
-- [ ] T017 [US1] Implement Ctrl+C / OS signal handling for the waiting TUI in `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go` and `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go`: propagate quit cleanly, restore terminal state (alt-screen/mouse if used), satisfy FR-007 and SC-006 ([spec.md](./spec.md) Edge Cases)
-- [ ] T018 [P] [US1] **Prefer** automated coverage for **SC-006** / **FR-007** in `/home/gyeonghokim/workspace/preflight/internal/tui/waiting_test.go` (synthetic `tea.Msg` / program teardown proving clean model stop and no stuck alt-screen state). Use quickstart manual checklist **only** if CI cannot approximate teardown; if manual-only, mark quickstart interrupt rows as **release-blocking** (see [spec.md](./spec.md) SC-006)
+- [x] T010 [US1] Create `/home/gyeonghokim/workspace/preflight/internal/anim/liquidblob.go` exporting `LiquidBlobConfig`, `RenderOpts`, `Frame`, `ComputeFrame` per `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/data-model.md` and 2D Cartesian metaball + planar wave + pulse model in `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/research.md` — **no annulus / no polar ring mask** (stdlib only; no bubbletea/lipgloss imports)
+- [x] T011 [P] [US1] Add `/home/gyeonghokim/workspace/preflight/internal/anim/liquidblob_test.go` asserting bitwise-stable `Frame` for identical `(config, width, height, tick, seed)`
+- [x] T012 [US1] Add `/home/gyeonghokim/workspace/preflight/internal/tui/spinner_view.go` implementing `RenderFrame(frame anim.Frame, opts RenderOptions) string` with `DisableANSI` / `DisableColor` per `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/contracts/spinner-render.md` using Lipgloss v2 when ANSI allowed
+- [x] T013 [P] [US1] Add golden text fixtures under `/home/gyeonghokim/workspace/preflight/internal/anim/testdata/spinner_golden/` and tests (e.g. in `/home/gyeonghokim/workspace/preflight/internal/tui/spinner_view_test.go`) that `RenderFrame` with `DisableANSI: true` matches files, contains no `0x1b` bytes, and enforces **[spec.md](./spec.md) SC-002** adjacent-tick rules per [contracts/spinner-render.md](./contracts/spinner-render.md) §Adjacent-frame smoothness (max differing cells per `(t,t+1)`; max fraction of identical adjacent pairs)
+- [x] T014 [US1] Add `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go` with Bubbletea v2 model: tick-based updates, calls `ComputeFrame` + `RenderFrame`, transitions to existing review model/state when provider result arrives
+- [x] T015 [US1] Refactor `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` so provider invocation runs concurrently with TUI (e.g. `tea.Cmd` wrapping provider `Run` or goroutine + custom `tea.Msg`) enabling spinner ticks during wait; preserve fail-open and exit code behavior for non-TUI branches until US2 tweaks
+- [x] T016 [US1] Handle spec edge cases in `/home/gyeonghokim/workspace/preflight/internal/tui/spinner_view.go` and/or `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go`: very narrow terminal, no-color / low-capability terminal (glyph-only path), fast provider response avoids jarring flash ([spec.md](./spec.md) Edge Cases)
+- [x] T017 [US1] Implement Ctrl+C / OS signal handling for the waiting TUI in `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go` and `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go`: propagate quit cleanly, restore terminal state (alt-screen/mouse if used), satisfy FR-007 and SC-006 ([spec.md](./spec.md) Edge Cases)
+- [x] T018 [P] [US1] **Prefer** automated coverage for **SC-006** / **FR-007** in `/home/gyeonghokim/workspace/preflight/internal/tui/waiting_test.go` (synthetic `tea.Msg` / program teardown proving clean model stop and no stuck alt-screen state). Use quickstart manual checklist **only** if CI cannot approximate teardown; if manual-only, mark quickstart interrupt rows as **release-blocking** (see [spec.md](./spec.md) SC-006)
 
 **Checkpoint**: US1 satisfied: animated waiting on TTY, goldens stable, review replaces spinner on completion; interrupt path defined and verified
 
@@ -70,8 +70,8 @@
 
 **Independent Test**: `preflight run --no-tui`: **stdout** has no ESC and contains review; **stderr** has plain progress text only ([spec.md](./spec.md) US2)
 
-- [ ] T019 [US2] Implement plain progress messaging during provider wait in `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` when `noTUI || !tui.IsTTY()`: write human-readable lines to **stderr** only (e.g. `Analyzing changes...`); clear or finalize stderr line before `/home/gyeonghokim/workspace/preflight/internal/tui/plain.go` `PlainRender` writes the review to **stdout** only
-- [ ] T020 [P] [US2] Extend `/home/gyeonghokim/workspace/preflight/internal/hook/hook_test.go` to capture **stdout** and **stderr** separately on plain path: assert **stdout** contains no `0x1b` bytes through wait + review (SC-004); assert **stderr** (진행 메시지 구간)에도 **`0x1b` 바이트가 없음** — US2·FR-006과 동일하게 색·커서·애니메이션용 ESC/SGR 없이 평문만 허용
+- [x] T019 [US2] Implement plain progress messaging during provider wait in `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` when `noTUI || !tui.IsTTY()`: write human-readable lines to **stderr** only (e.g. `Analyzing changes...`); clear or finalize stderr line before `/home/gyeonghokim/workspace/preflight/internal/tui/plain.go` `PlainRender` writes the review to **stdout** only
+- [x] T020 [P] [US2] Extend `/home/gyeonghokim/workspace/preflight/internal/hook/hook_test.go` to capture **stdout** and **stderr** separately on plain path: assert **stdout** contains no `0x1b` bytes through wait + review (SC-004); assert **stderr** (진행 메시지 구간)에도 **`0x1b` 바이트가 없음** — US2·FR-006과 동일하게 색·커서·애니메이션용 ESC/SGR 없이 평문만 허용
 
 **Checkpoint**: US2 independently verifiable; stdout/stderr contract matches constitution
 
@@ -83,8 +83,8 @@
 
 **Independent Test**: Inject render failure or panic guard in waiting path; completed review still renders and exit code matches review-only rules ([spec.md](./spec.md) US3)
 
-- [ ] T021 [US3] Add defensive error handling in `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go` and integration points in `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` so spinner errors log to stderr (optional) and fall back to blank/minimal wait UI without returning spurious hook errors
-- [ ] T022 [P] [US3] Add regression test in `/home/gyeonghokim/workspace/preflight/internal/hook/hook_test.go` or `/home/gyeonghokim/workspace/preflight/internal/tui/waiting_test.go` using injected failure/dummy renderer to assert exit code matches non-spinner baseline for same `review.Review` outcome (FR-008)
+- [x] T021 [US3] Add defensive error handling in `/home/gyeonghokim/workspace/preflight/internal/tui/waiting.go` and integration points in `/home/gyeonghokim/workspace/preflight/internal/hook/hook.go` so spinner errors log to stderr (optional) and fall back to blank/minimal wait UI without returning spurious hook errors
+- [x] T022 [P] [US3] Add regression test in `/home/gyeonghokim/workspace/preflight/internal/hook/hook_test.go` or `/home/gyeonghokim/workspace/preflight/internal/tui/waiting_test.go` using injected failure/dummy renderer to assert exit code matches non-spinner baseline for same `review.Review` outcome (FR-008)
 
 **Checkpoint**: US3 proven: animation cannot block or falsify push result
 
@@ -94,9 +94,9 @@
 
 **Purpose**: Docs, gates, manual validation (including SC-001 / SC-003 per [spec.md](./spec.md))
 
-- [ ] T023 [P] Update `/home/gyeonghokim/workspace/preflight/CLAUDE.md` Active Technologies to Bubbletea v2 (`charm.land/bubbletea/v2`) + Lipgloss v2 **`github.com/charmbracelet/lipgloss/v2`** (same as [research.md](./research.md) §2)
-- [ ] T024 [P] Refresh `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/quickstart.md` after implementation: final `go test` paths, **stdout vs stderr** (**FR-006**), SC-001 optional TTY helpers, SC-003 **100ms** objective note, interrupt sign-off, **Constitution IV** AI missing/timeout repro (align with T025)
-- [ ] T025 Run `make lint`, `make test`, and `go build ./...` from `/home/gyeonghokim/workspace/preflight`; fix any regressions; complete manual checks from `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/quickstart.md`. **Constitution IV (AI tool fail-open)**: confirm behavior unchanged after hook/async work — when the AI CLI is **missing** or **times out**, preflight **exits 0** and emits a **warning on stderr** (extend `/home/gyeonghokim/workspace/preflight/internal/hook/hook_test.go` or document reproducible manual steps in quickstart if no existing test covers this path)
+- [x] T023 [P] Update `/home/gyeonghokim/workspace/preflight/CLAUDE.md` Active Technologies to Bubbletea v2 (`charm.land/bubbletea/v2`) + Lipgloss v2 **`github.com/charmbracelet/lipgloss/v2`** (same as [research.md](./research.md) §2)
+- [x] T024 [P] Refresh `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/quickstart.md` after implementation: final `go test` paths, **stdout vs stderr** (**FR-006**), SC-001 optional TTY helpers, SC-003 **100ms** objective note, interrupt sign-off, **Constitution IV** AI missing/timeout repro (align with T025)
+- [x] T025 Run `make lint`, `make test`, and `go build ./...` from `/home/gyeonghokim/workspace/preflight`; fix any regressions; complete manual checks from `/home/gyeonghokim/workspace/preflight/specs/002-animated-waiting-spinner/quickstart.md`. **Constitution IV (AI tool fail-open)**: confirm behavior unchanged after hook/async work — when the AI CLI is **missing** or **times out**, preflight **exits 0** and emits a **warning on stderr** (extend `/home/gyeonghokim/workspace/preflight/internal/hook/hook_test.go` or document reproducible manual steps in quickstart if no existing test covers this path)
 
 ---
 
@@ -191,7 +191,7 @@ Phase 1 (Setup)
 | **Polish** | 3 (T023–T025) |
 | **Tasks with [P]** | 11 |
 
-**Format validation**: Every task uses `- [ ]`, sequential `TNNN`, optional `[P]`, `[USn]` only on story phases 3–5, and includes an absolute `/home/gyeonghokim/workspace/preflight/...` file path in the description.
+**Format validation**: Every task uses `- [x]`, sequential `TNNN`, optional `[P]`, `[USn]` only on story phases 3–5, and includes an absolute `/home/gyeonghokim/workspace/preflight/...` file path in the description.
 
 ---
 

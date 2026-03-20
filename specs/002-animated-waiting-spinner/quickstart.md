@@ -10,7 +10,7 @@
 
 ## Scope of this feature
 
-1. **Migrate** Bubbletea and Lipgloss to **v2**: `charm.land/bubbletea/v2` + **`github.com/charmbracelet/lipgloss/v2`** (locked in [research.md](./research.md) §2).
+1. **Migrate** Bubbletea and Lipgloss to **v2**: `charm.land/bubbletea/v2` + **`charm.land/lipgloss/v2`** (canonical `go.mod` paths; Charm publishes v2 Lipgloss on `charm.land` — see [research.md](./research.md) §2).
 2. Implement a **2D liquid blob** waiting animation (see [research.md](./research.md)). The phrase **“liquid blob ring”** is a **visual nickname only** — it does **not** mean a geometric circular/torus band or annulus mask.
 3. Keep **`--no-tui` / non-TTY** path free of animation ESC on **stdout**; **progress lines go to stderr**, final plain review to **stdout** (**FR-006**, 헌장 IV — see [spec.md](./spec.md) US2).
 4. Add **deterministic golden tests** for animation frames via extracted render pipeline.
@@ -93,7 +93,9 @@ After hook/async refactors, re-verify **unchanged** behavior:
 
 - **Given** configured provider binary is absent **or** review subprocess times out (per existing config), **Then** preflight **exits 0** and prints a **warning on stderr** (no silent block).
 
-Add or extend a test in `internal/hook/hook_test.go` when feasible; otherwise document exact repro steps here after implementation.
+**Automated coverage**: `TestRun_ProviderNotFound_FailOpen` in `internal/hook/hook_test.go` exercises the missing-binary path (exit 0 + stderr warning). Timeout / `DeadlineExceeded` follows the same `ShouldFailOpen` branch in `hook.Run` as before the TUI work.
+
+**Manual repro** (timeout): set a very low `timeout` in `.preflight.yml` and run against a slow or blocking provider; expect exit 0 and a stderr warning, not a blocked push.
 
 ---
 
