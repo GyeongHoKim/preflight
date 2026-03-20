@@ -46,9 +46,10 @@ Key design points:
 5. Exit-code contract verified for affected code paths
 
 ## Active Technologies
-- Go (latest stable, ≥1.22) + cobra, bubbletea, lipgloss, go-isatty, testify, yaml.v3 (001-preflight-ai-review)
+- Go 1.26.x (matches repo `go.mod`) + `charm.land/bubbletea/v2`, Lipgloss v2 `charm.land/lipgloss/v2`, cobra, go-isatty, testify, yaml.v3 (002-animated-waiting-spinner)
 - Providers: claude, codex (subprocess, no API keys)
-- N/A (no persistent state; config read from YAML files, hook written to `.git/hooks/pre-push`) (001-preflight-ai-review)
+- N/A (no persistent state; config read from YAML files, hook written to `.git/hooks/pre-push`)
 
 ## Recent Changes
+- 002-animated-waiting-spinner: Bubbletea v2 + Lipgloss v2; liquid-blob waiting animation (`internal/anim`, `internal/tui/waiting.go`); async provider under TUI
 - 001-preflight-ai-review: Added Go (latest stable, ≥1.22) + cobra, bubbletea, lipgloss, go-isatty, testify, yaml.v3

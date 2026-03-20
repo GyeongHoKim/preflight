@@ -106,9 +106,9 @@
 
 ---
 
-## Phase 7: User Story 5 — Headless / CI Mode (Priority: P5)
+## Phase 7: User Story 5 — Plain-Text Output (`--no-tui`) (Priority: P5)
 
-**Goal**: `--no-tui` and auto-TTY-detection produce machine-parseable plain-text output; no TUI is launched in non-interactive environments.
+**Goal**: `--no-tui` and auto-TTY-detection produce machine-parseable plain-text output; no TUI is launched when the user opts out or when stdout is not a TTY.
 
 **Independent Test**: `git diff HEAD~1 | preflight run --no-tui --provider claude > output.txt`; `output.txt` contains human-readable findings; `grep -i "critical\|warning\|no issues" output.txt` succeeds.
 
@@ -221,7 +221,7 @@ After T010 (Runner interface + MockRunner):
 2. **v0.2** (+ Phase 4): Interactive TUI with block/override — fully safe gating
 3. **v0.3** (+ Phase 5): Fail-open guarantees — production-safe hook
 4. **v0.4** (+ Phase 6): `preflight install` — one-command setup
-5. **v0.5** (+ Phase 7): `--no-tui`, CI mode
+5. **v0.5** (+ Phase 7): `--no-tui` and plain-text path
 6. **v1.0** (+ Phase 8–9): All 4 providers, config file, goreleaser distribution
 
 ---

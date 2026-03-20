@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	lipgloss "charm.land/lipgloss/v2"
 	"github.com/mattn/go-isatty"
 
 	"github.com/GyeongHoKim/preflight/internal/review"
@@ -30,6 +30,11 @@ func (m ReviewModel) Choice() string {
 	return m.choice
 }
 
+// Review returns the parsed review payload (may be nil).
+func (m ReviewModel) Review() *review.Review {
+	return m.review
+}
+
 // Init implements tea.Model.
 func (m ReviewModel) Init() tea.Cmd {
 	return nil
@@ -41,7 +46,7 @@ func (m ReviewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		return m, nil
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if m.review != nil && m.review.Blocking {
 			switch msg.String() {
 			case "y", "Y":
@@ -63,7 +68,11 @@ func (m ReviewModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View implements tea.Model.
-func (m ReviewModel) View() string {
+func (m ReviewModel) View() tea.View {
+	return tea.NewView(m.viewString())
+}
+
+func (m ReviewModel) viewString() string {
 	if m.review == nil {
 		return styleFooter.Render("preflight: no review available") + "\n"
 	}
