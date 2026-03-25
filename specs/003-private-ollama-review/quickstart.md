@@ -3,7 +3,8 @@
 **Feature**: 003-private-ollama-review  
 **Date**: 2026-03-20
 
-This document describes how operators will exercise the feature once implemented. Exact YAML keys MUST match the implementation; names below are **planned**.
+This document describes how operators exercise the Ollama provider. YAML keys match
+`internal/config/config.go` (`OllamaConfig`).
 
 ## Prerequisites
 
@@ -11,24 +12,28 @@ This document describes how operators will exercise the feature once implemented
 - A model pulled on that server (e.g. `ollama pull llama3` on the host running Ollama).
 - `preflight` built from a branch that includes the Ollama provider.
 
-## Configuration (planned)
+## Configuration
 
-Project file `.preflight.yml` (or global `~/.config/preflight/.preflight.yml`) might include:
+Project file `.preflight.yml` (or global `~/.config/preflight/.preflight.yml`):
 
 ```yaml
 provider: ollama
 timeout: 120s
-# Planned nested or flat keys — confirm at implementation time:
 ollama:
   base_url: "http://ollama.internal:11434"
   model: "llama3"
   max_tool_turns: 25
+  max_read_bytes: 65536
+  max_list_entries: 500
+  max_search_matches: 100
 ```
 
 Trust and path restrictions (from spec FR-007):
 
 ```yaml
 ollama:
+  allow_prefixes:
+    - "internal/"
   deny_paths:
     - ".env*"
     - "secrets/**"

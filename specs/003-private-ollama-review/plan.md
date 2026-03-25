@@ -31,16 +31,12 @@ Deliver an **`ollama` provider** for preflight that talks to an **organization-c
 | IV. CLI I/O | OK | Runner returns `ProviderResult`; hook stdout/stderr contract unchanged. |
 | V. Minimal dependencies | OK | Prefer stdlib for Ollama HTTP; see Complexity if adding `ollama/api`. |
 
-### Technology Stack conflict & resolution
+### Constitution alignment (Ollama HTTP)
 
-**Issue**: Constitution currently lists providers as **subprocess**-only and says “no direct API usage.” This feature **requires HTTP** to a user-configured Ollama base URL.
-
-**Resolution for this plan**:
-
-1. **Interpretation**: The spirit is “no third-party cloud API keys / no exfil to vendors”; HTTP to an **internal, operator-controlled** Ollama endpoint matches the product’s privacy story.  
-2. **Follow-up (non-blocking for design)**: Propose a **MINOR** amendment to `.specify/memory/constitution.md` — add `ollama` under supported providers and clarify that **local or internal HTTP endpoints** used for inference are permitted, distinct from vendor REST APIs.
-
-Until amended, document this deviation in the PR implementing the feature.
+The repository constitution (v1.1.0+) explicitly allows **user-configured local or
+organization-controlled HTTP inference** (e.g. Ollama) alongside subprocess CLI
+providers, and forbids *requiring* third-party cloud APIs for core review. This
+plan matches that policy.
 
 ### Post-design re-check
 

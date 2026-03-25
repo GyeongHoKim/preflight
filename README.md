@@ -2,7 +2,7 @@
 
 > AI-powered code review in your terminal, before you push.
 
-**preflight** runs an AI code review on your staged diff using locally installed AI CLI tools — no API tokens required. Works with your existing subscription to Claude or ChatGPT/Codex.
+**preflight** runs an AI code review on your staged diff using locally installed AI CLI tools (Claude, Codex) or, for air‑gapped teams, an **organization-controlled [Ollama](https://ollama.com)** HTTP server. Subprocess providers need no API tokens; the Ollama path uses only the `base_url` you configure.
 
 ```
 $ git push origin main
@@ -43,10 +43,11 @@ preflight fills that gap: it runs entirely on your local machine using the CLI t
 
 One of the following CLI tools installed and authenticated:
 
-| Provider  | CLI                                                | Authentication       |
-| --------- | -------------------------------------------------- | -------------------- |
-| Anthropic | [`claude`](https://code.claude.com)                | Claude subscription  |
-| OpenAI    | [`codex`](https://developers.openai.com/codex/cli) | ChatGPT subscription |
+| Provider  | CLI / transport                                                                | Authentication / trust boundary  |
+| --------- | ------------------------------------------------------------------------------ | -------------------------------- |
+| Anthropic | [`claude`](https://code.claude.com)                                            | Claude subscription (local CLI)  |
+| OpenAI    | [`codex`](https://developers.openai.com/codex/cli)                             | ChatGPT subscription (local CLI) |
+| Ollama    | HTTP to your Ollama instance ([API](https://docs.ollama.com/api/introduction)) | Your server; no vendor cloud API |
 
 ---
 
@@ -171,7 +172,7 @@ Create `.preflight.yml` in your repository root (or `~/.config/preflight/.prefli
 
 ```yaml
 # .preflight.yml
-provider: claude # claude | codex | auto
+provider: claude # claude | codex | ollama | auto
 
 # Severity threshold for blocking a push.
 # INFO and WARNING show in the TUI but never block.
@@ -189,6 +190,33 @@ exclude:
   - "vendor/**"
   - "*.pb.go"
 ```
+
+### Private Ollama (organization-controlled inference)
+
+Use `provider: ollama` when reviews must stay inside your network. preflight sends the
+staged **diff** and optional **repository tool** traffic (list/read/search under the
+git root) **only** to `ollama.base_url` — not to Claude, Codex, or other subprocess
+CLIs.
+
+```yaml
+provider: ollama
+timeout: 120s
+ollama:
+  base_url: "http://ollama.internal:11434"
+  model: "llama3"
+  max_tool_turns: 25
+  max_read_bytes: 65536
+  max_list_entries: 500
+  max_search_matches: 100
+  allow_prefixes: [] # optional; empty = whole repo subject to deny_paths
+  deny_paths:
+    - ".env*"
+    - "secrets/**"
+```
+
+If Ollama is unreachable or misconfigured, preflight **fails open** (exit `0`) with a
+stderr warning, same as when a subprocess CLI is missing. See also
+`specs/003-private-ollama-review/quickstart.md`.
 
 ### Environment variables
 
@@ -212,7 +240,7 @@ Commands:
   check       Verify that a supported AI CLI is installed and authenticated
 
 Flags:
-  --provider string   AI provider to use (claude, codex)
+  --provider string   AI provider to use (claude, codex, ollama)
   --force             Push even if CRITICAL issues are found
   --no-tui            Print results as plain text (useful for CI or pipes)
   --config string     Path to config file (default: ./.preflight.yml)
@@ -248,32 +276,39 @@ preflight run --no-tui
 
 1. `git push` triggers the `pre-push` hook
 2. preflight collects the diff between your branch and its upstream
-3. The diff is passed to your configured AI CLI with a structured review prompt
-4. The CLI returns a JSON response with issues and severity ratings
+3. The diff is passed to your configured provider: a **subprocess CLI** (claude/codex) or **Ollama HTTP** (`/api/chat`), with the same structured review schema
+4. The provider returns JSON with issues and severity ratings
 5. preflight renders the results in a TUI
 6. If no `CRITICAL` issues exist (or you choose "Push anyway"), git push proceeds; otherwise it exits non-zero and the push is cancelled
 
-The diff never leaves your machine except to the AI CLI, which uses your existing local session — no separate network calls are made by preflight itself.
+With **claude** or **codex**, the diff is sent to your local CLI session. With **ollama**,
+preflight makes HTTP requests only to the configured `base_url` (plus repository tool
+calls that read the working tree locally before responding to the model).
 
 ---
 
 ## Supported Providers
 
-| Provider  | CLI                                                | Non-interactive    | JSON output flag              |
-| --------- | -------------------------------------------------- | ------------------ | ----------------------------- |
-| Anthropic | [`claude`](https://code.claude.com)                | `claude -p "..."`  | `--output-format json`        |
-| OpenAI    | [`codex`](https://developers.openai.com/codex/cli) | `codex exec "..."` | `--output-schema schema.json` |
+| Provider  | Transport        | Notes                                                                    |
+| --------- | ---------------- | ------------------------------------------------------------------------ |
+| Anthropic | `claude` CLI     | `--output-format json`, `--json-schema`                                  |
+| OpenAI    | `codex` CLI      | `--output-schema` file                                                   |
+| Ollama    | HTTP `/api/chat` | JSON schema via `format`; tools `list_files`, `read_file`, `search_repo` |
 
-Both providers support structured JSON output in non-interactive mode. Schema enforcement is treated as best-effort — if the response doesn't parse against the expected schema, preflight shows the raw response in the TUI and lets you decide whether to block or continue.
+Subprocess providers support structured JSON in non-interactive mode. Ollama uses the
+same canonical review JSON on stdout. Schema enforcement is best-effort — if the
+response doesn't parse, preflight may retry once then fail open.
 
-Provider is auto-detected in order: `claude` → `codex`. Override with `--provider` or the config file.
+`auto` detects subprocess CLIs in order: `claude` → `codex`. Ollama is **never**
+auto-selected; set `provider: ollama` explicitly. Override with `--provider` or the
+config file.
 
 ---
 
 ## FAQ
 
 **Does this require an API key?**
-No. preflight uses locally installed CLI tools that authenticate with your existing subscription (Claude, ChatGPT, etc.). No API key or token is needed.
+No for **claude** and **codex**: preflight uses locally installed CLI tools that authenticate with your existing subscription. For **ollama**, you point at your own server URL; preflight does not send data to a vendor cloud API for that mode.
 
 **Can I use this in CI?**
 No. preflight is designed exclusively for local developer use — it relies on your personally authenticated AI CLI session, which is not available in CI environments. For AI-assisted code review in CI, refer to the official API documentation for your provider: [Claude](https://docs.anthropic.com/en/docs/about-claude/models/overview), [OpenAI](https://platform.openai.com/docs/guides/code-review).
