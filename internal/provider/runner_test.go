@@ -2,11 +2,14 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GyeongHoKim/preflight/internal/ollama"
 )
 
 func TestShouldFailOpen(t *testing.T) {
@@ -19,6 +22,7 @@ func TestShouldFailOpen(t *testing.T) {
 		{"ErrProviderNotFound", ErrProviderNotFound, true},
 		{"DeadlineExceeded", context.DeadlineExceeded, true},
 		{"ExitError", &exec.ExitError{}, true},
+		{"Ollama unavailable", fmt.Errorf("wrap: %w", ollama.ErrUnavailable), true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

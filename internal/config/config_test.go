@@ -78,3 +78,31 @@ func TestLoad_InvalidBlockOn(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid block_on")
 }
+
+func TestLoad_OllamaValid(t *testing.T) {
+	dir := t.TempDir()
+	path := writeYAML(t, dir, ".preflight.yml", `
+provider: ollama
+ollama:
+  base_url: http://localhost:11434
+  model: llama3
+`)
+	cfg, err := Load(path, "")
+	require.NoError(t, err)
+	assert.Equal(t, "ollama", cfg.Provider)
+	assert.Equal(t, "http://localhost:11434", cfg.Ollama.BaseURL)
+	assert.Equal(t, "llama3", cfg.Ollama.Model)
+	assert.Greater(t, cfg.Ollama.MaxToolTurns, 0)
+}
+
+func TestLoad_OllamaMissingModel(t *testing.T) {
+	dir := t.TempDir()
+	path := writeYAML(t, dir, ".preflight.yml", `
+provider: ollama
+ollama:
+  base_url: http://localhost:11434
+`)
+	_, err := Load(path, "")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "ollama.model")
+}

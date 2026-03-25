@@ -3,6 +3,7 @@ package hook
 import (
 	"bytes"
 	"context"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -120,6 +121,27 @@ func TestRun_PlainPath_NoEscOnStdoutOrStderr(t *testing.T) {
 	require.Equal(t, 0, code)
 	assert.NotContains(t, out.String(), "\x1b")
 	assert.NotContains(t, errOut.String(), "\x1b")
+}
+
+func TestBuildRunner_Ollama(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, exec.Command("git", "init", dir).Run())
+	cfg := &config.Config{
+		Provider:     "ollama",
+		BlockOn:      "critical",
+		Timeout:      10 * time.Second,
+		MaxDiffBytes: 1024,
+		Ollama: config.OllamaConfig{
+			BaseURL: "http://localhost:11434",
+			Model:   "llama3",
+		},
+	}
+	require.NoError(t, config.Validate(cfg))
+
+	r, err := buildRunner(cfg, dir)
+	require.NoError(t, err)
+	_, ok := r.(*provider.OllamaRunner)
+	assert.True(t, ok)
 }
 
 func TestRun_MalformedResponse_RetryAlsoFails_FailOpen(t *testing.T) {

@@ -2,10 +2,12 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	"github.com/GyeongHoKim/preflight/internal/config"
 	"github.com/GyeongHoKim/preflight/internal/hook"
 )
 
@@ -27,6 +29,9 @@ func buildRunCmd() *cobra.Command {
 			}
 			if blockOnFlag != "" {
 				cfg.BlockOn = blockOnFlag
+			}
+			if err := config.Validate(cfg); err != nil {
+				return fmt.Errorf("preflight: %w", err)
 			}
 
 			noTUI := noTUIFlag || globalFlags.noTUI

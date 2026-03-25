@@ -76,6 +76,8 @@ func CleanReview(provider string) review.ProviderResult {
 	switch provider {
 	case "codex", "unknown":
 		return CodexEnvelope(inner, "result")
+	case "ollama":
+		return review.ProviderResult{Stdout: inner}
 	default:
 		return ClaudeEnvelope(inner)
 	}

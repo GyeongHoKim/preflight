@@ -81,7 +81,7 @@ func Run(ctx context.Context, cfg *config.Config, stdin io.Reader, stdout, stder
 
 	// Determine provider runner.
 	if providerRunner == nil {
-		providerRunner, err = buildRunner(cfg)
+		providerRunner, err = buildRunner(cfg, wd)
 		if err != nil {
 			logf(stderr, "preflight: %v; skipping review\n", err)
 			return 0
@@ -232,7 +232,7 @@ func logf(w io.Writer, format string, args ...interface{}) {
 }
 
 // buildRunner constructs the appropriate provider runner based on config.
-func buildRunner(cfg *config.Config) (provider.Runner, error) {
+func buildRunner(cfg *config.Config, workDir string) (provider.Runner, error) {
 	provName := cfg.Provider
 	if provName == "auto" {
 		detected, err := provider.Detect(defaultProviders)
@@ -250,6 +250,12 @@ func buildRunner(cfg *config.Config) (provider.Runner, error) {
 		return provider.NewClaudeRunner(prompt, schema), nil
 	case "codex":
 		return provider.NewCodexRunner(prompt, schema), nil
+	case "ollama":
+		root, err := diff.TopLevel(workDir)
+		if err != nil {
+			return nil, fmt.Errorf("resolve git top-level: %w", err)
+		}
+		return provider.NewOllamaRunner(cfg, root, prompt, schema), nil
 	default:
 		return nil, fmt.Errorf("unknown provider %q", provName)
 	}

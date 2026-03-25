@@ -38,8 +38,9 @@ func extractEnvelopePayload(providerName string, data []byte) []byte {
 	case "claude":
 		// https://code.claude.com/docs/en/cli-reference
 		fields = []string{"result"}
-	case "codex", "unknown":
+	case "codex", "unknown", "ollama":
 		// codex exec --json schema not officially documented (contract: try common fields).
+		// ollama may wrap JSON in common envelope fields when models misbehave.
 		fields = []string{"result", "response", "output", "content"}
 	default:
 		fields = []string{"result", "response", "output", "content"}

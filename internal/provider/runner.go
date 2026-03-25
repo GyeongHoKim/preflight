@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os/exec"
 
+	"github.com/GyeongHoKim/preflight/internal/ollama"
 	"github.com/GyeongHoKim/preflight/internal/review"
 )
 
@@ -28,11 +29,15 @@ type Runner interface {
 //   - ErrProviderNotFound: binary not in PATH
 //   - context.DeadlineExceeded: AI CLI timed out
 //   - *exec.ExitError: non-zero exit from the AI CLI subprocess
+//   - ollama.ErrUnavailable: Ollama HTTP or transport failure
 func shouldFailOpen(err error) bool {
 	if err == nil {
 		return false
 	}
 	if errors.Is(err, ErrProviderNotFound) {
+		return true
+	}
+	if errors.Is(err, ollama.ErrUnavailable) {
 		return true
 	}
 	if errors.Is(err, context.DeadlineExceeded) {

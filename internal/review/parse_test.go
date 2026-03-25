@@ -19,6 +19,15 @@ func TestParseReview_DirectCanonical(t *testing.T) {
 	assert.Equal(t, "direct summary", rev.Summary)
 }
 
+func TestParseReview_OllamaDirect(t *testing.T) {
+	raw := review.ProviderResult{Stdout: reviewtest.CanonicalJSON("ollama ok", false, nil, review.VerdictCorrect, 0.85)}
+	rev, err := review.ParseReview("ollama", raw)
+	require.NoError(t, err)
+	require.NotNil(t, rev)
+	assert.Equal(t, "ollama", rev.Provider)
+	assert.Equal(t, "ollama ok", rev.Summary)
+}
+
 func TestParseReview_ValidReview(t *testing.T) {
 	inner := reviewtest.CanonicalJSON("critical issue found", true, []reviewtest.FindingSpec{
 		{Severity: "critical", Category: "security", Message: "hardcoded secret", Location: "main.go:10"},
