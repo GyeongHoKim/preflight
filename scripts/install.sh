@@ -26,19 +26,22 @@ case "$(uname -m)" in
 esac
 
 # Resolve latest version
-VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
   | grep '"tag_name"' \
   | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
 
-if [ -z "$VERSION" ]; then
+if [ -z "$TAG" ]; then
   echo "error: could not determine latest version" >&2
   exit 1
 fi
 
+# GitHub release tag typically includes "v" (e.g. v0.4.0), but GoReleaser
+# archive names use the plain version (e.g. 0.4.0).
+VERSION=${TAG#v}
 ARCHIVE="${BINARY}_${VERSION}_${OS}_${ARCH}.tar.gz"
-URL="https://github.com/${REPO}/releases/download/${VERSION}/${ARCHIVE}"
+URL="https://github.com/${REPO}/releases/download/${TAG}/${ARCHIVE}"
 
-echo "Installing ${BINARY} ${VERSION} (${OS}/${ARCH})..."
+echo "Installing ${BINARY} ${TAG} (${OS}/${ARCH})..."
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
